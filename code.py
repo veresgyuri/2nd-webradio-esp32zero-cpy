@@ -176,7 +176,7 @@ def play_radio():
         audio.play(mp3_stream)
         
         while audio.playing:
-            # Itt fut a zene. 
+            # Itt fut a zene.
             # Ha megszakad a stream, a 'playing' hamis lesz vagy a sock dob hibát.
             pass
             
