@@ -23,7 +23,7 @@
         
 """
 
-# ver 1.0 - 2026-02-19 Működő minimál kód
+# ver 0.0 - 2026-02-19 Működő minimál kód
 
 
 import time
@@ -34,7 +34,7 @@ import audiobusio
 import audiomp3
 import os
 
-VERSION = "1.0 - alls. komm. és kapcs. rajz - 2026-02-19"
+VERSION = "0.0 - alls. komm. és kapcs. rajz - 2026-02-19"
 
 # --- Beállítások betöltése a settings.toml-ből ---
 ssid = os.getenv("CIRCUITPY_WIFI_SSID")
@@ -182,6 +182,7 @@ def play_radio():
             
     except Exception as e:
         print("Hiba lejátszás közben:", e)
+        audio.stop() # Leállítja a DMA-t és üríti a puffert (kerregés ellen)
         if sock:
             sock.close()
         time.sleep(3)
