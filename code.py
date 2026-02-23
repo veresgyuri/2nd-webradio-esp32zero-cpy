@@ -24,6 +24,7 @@
 """
 
 # ver 0.0 - 2026-02-19 Működő minimál kód
+# ver 1.0 - Procedurális eljárásrend - függvényorientált
 
 
 import time
@@ -34,9 +35,9 @@ import audiobusio
 import audiomp3
 import os
 
-VERSION = "0.0 - alls. komm. és kapcs. rajz - 2026-02-19"
+VERSION = "1.0 - PP-moduláris átírás 2026-02-22"
 
-# --- Beállítások betöltése a settings.toml-ből ---
+# --- Globális konstansok ---
 ssid = os.getenv("CIRCUITPY_WIFI_SSID")
 password = os.getenv("CIRCUITPY_WIFI_PASSWORD")
 
@@ -44,9 +45,9 @@ password = os.getenv("CIRCUITPY_WIFI_PASSWORD")
 
 # Kossuth rádió
 # https://mr-stream.connectmedia.hu//4736//mr1.mp3
-# HOST = "mr-stream.connectmedia.hu"
-# PORT = 80
-# PATH = "/4736/mr1.mp3"
+HOST = "mr-stream.connectmedia.hu"
+PORT = 80
+PATH = "/4736/mr1.mp3"
 
 # Dankó rádió
 # https://mr-stream.connectmedia.hu//4748//mr7.mp3
@@ -68,9 +69,9 @@ password = os.getenv("CIRCUITPY_WIFI_PASSWORD")
 
 # Petőfi rádió
 # https://mr-stream.connectmedia.hu//4738//mr2.mp3
-HOST = "mr-stream.connectmedia.hu"
-PORT = 80
-PATH = "/4738/mr2.mp3"
+# HOST = "mr-stream.connectmedia.hu"
+# PORT = 80
+# PATH = "/4738/mr2.mp3"
 
 # Katolikus - low mp3
 # http://katolikusradio.hu:9000/live_low.mp3
@@ -115,78 +116,92 @@ PIN_DIN  = board.IO7
 print("--- ESP32-S3 Zero Webrádió (Socket mód) ---")
 print("Ver.:", VERSION, "\n")
 
-# 1. WiFi Csatlakozás
-print(f"Csatlakozás WiFi-hez: {ssid}...")
-try:
-    wifi.radio.connect(ssid, password)
-    print("WiFi csatlakozva! IP:", wifi.radio.ipv4_address)
-except Exception as e:
-    print("WiFi hiba:", e)
-    while True: pass
-
-# 2. Audio kimenet (I2S) beállítása
-try:
-    audio = audiobusio.I2SOut(bit_clock=PIN_BCLK, word_select=PIN_LRCK, data=PIN_DIN)
-    print("I2S hardver OK.")
-except Exception as e:
-    print("I2S hiba:", e)
-    while True: pass
-
-# 3. Socket és Pool létrehozása
-pool = socketpool.SocketPool(wifi.radio)
-
-def play_radio():
-    print(f"Csatlakozás a szerverhez: {HOST}:{PORT}")
-    sock = None
-    try:
-        # Kapcsolat nyitása
-        sock = pool.socket(pool.AF_INET, pool.SOCK_STREAM)
-        sock.connect((HOST, PORT))
+# --- 1. WiFi kezelés ---
+def ensure_wifi():
+    """Ellenőrzi a kapcsolatot, és ha nincs, csatlakozik."""
+    if wifi.radio.connected:
+        return True
         
-        # HTTP kérés küldése kézzel (ez a "nyers" módszer)
-        request = f"GET {PATH} HTTP/1.0\r\nHost: {HOST}\r\n\r\n"
+    print(f"Csatlakozás WiFi-hez: {ssid}...")
+    try:
+        wifi.radio.connect(ssid, password)
+        print("WiFi csatlakozva! IP:", wifi.radio.ipv4_address)
+        return True
+    except Exception as e:
+        print("WiFi csatlakozási hiba:", e)
+        return False
+
+# --- 2. FÜGGVÉNY: Audio hardver (I2S) indítása ---
+def init_audio():
+    """Létrehozza és visszaadja az I2S objektumot."""
+    try:
+        return audiobusio.I2SOut(bit_clock=PIN_BCLK, word_select=PIN_LRCK, data=PIN_DIN)
+    except Exception as e:
+        print("I2S Init Hiba:", e)
+        return None
+
+# --- 3. FÜGGVÉNY: Stream lejátszása (A 'munkás' rész) ---
+def stream_radio(pool, host, port, path):
+    """Csatlakozik a szerverhez és lejátssza a streamet."""
+    sock = None
+    audio = None
+    
+    try:
+        print(f"Csatlakozás a szerverhez: {host}:{port}")
+        sock = pool.socket(pool.AF_INET, pool.SOCK_STREAM)
+        sock.settimeout(10)
+        sock.connect((host, port))
+        
+        request = f"GET {path} HTTP/1.0\r\nHost: {host}\r\n\r\n"
         sock.send(bytes(request, "utf-8"))
         
-        # --- Fejléc átugrása ---
-        # A szerver először szöveges infót küld (HTTP/1.0 200 OK...)
-        # Ezt addig kell olvasni, amíg nem találunk egy üres sort (\r\n\r\n)
-        print("Fejléc átugrása...")
+        # Fejléc átugrása
+        print("Fejléc feldolgozása...")
         buffer = bytearray(1)
         prev_seq = b""
         while True:
-            count = sock.recv_into(buffer, 1) # Egy bájtot olvasunk egyszerre
-            if count == 0:
-                raise Exception("A szerver lezárta a kapcsolatot a fejlécben.")
-            
-            # Figyeljük a dupla soremelést (ez jelzi a fejléc végét)
+            count = sock.recv_into(buffer, 1)
+            if count == 0: raise Exception("Szerver bontotta")
             prev_seq += buffer
-            if b"\r\n\r\n" in prev_seq:
-                break # Megvan a zene eleje!
-            
-            # Hogy ne teljen meg a memória, csak az utolsó 4 karaktert tároljuk
-            if len(prev_seq) > 4:
-                prev_seq = prev_seq[-4:]
+            if b"\r\n\r\n" in prev_seq: break
+            if len(prev_seq) > 4: prev_seq = prev_seq[-4:]
 
-        print("Zene indítása...")
-        
-        # Itt adjuk át a nyers socketet a dekódernek
-        # Most már közvetlenül a zenét kapja
+        # Audio indítása csak akkor, ha már van adat
+        audio = init_audio()
+        if not audio: return # Ha hardver hiba van, kilépünk
+
+        print(">>> ZENE INDÍTÁSA <<<")
         mp3_stream = audiomp3.MP3Decoder(sock)
-     
         audio.play(mp3_stream)
         
         while audio.playing:
-            # Itt fut a zene.
-            # Ha megszakad a stream, a 'playing' hamis lesz vagy a sock dob hibát.
-            pass
+            pass # Itt szól a zene
             
     except Exception as e:
-        print("Hiba lejátszás közben:", e)
-        audio.stop() # Leállítja a DMA-t és üríti a puffert (kerregés ellen)
+        print("Stream hiba:", e)
+    
+    finally:
+        # TAKARÍTÁS (Ez fut le mindig, hiba esetén is)
+        print("Takarítás...")
+        if audio:
+            audio.stop()
+            audio.deinit() # Kerregés ellen!
         if sock:
             sock.close()
-        time.sleep(3)
 
-# Fő ciklus
+# --- FŐ PROGRAM (MAIN LOOP) ---
+# Nézd meg, mennyivel tisztább lett!
+pool = socketpool.SocketPool(wifi.radio)
+
 while True:
-    play_radio()
+    if ensure_wifi():
+        # Ha van net, mehet a zene
+        stream_radio(pool, HOST, PORT, PATH)
+        
+        # Ha a stream_radio visszatér (megszakadt), várunk picit
+        print("Újraindítás 3 mp múlva...")
+        time.sleep(3)
+    else:
+        # Ha nincs net, várunk többet
+        print("Várakozás WiFi-re...")
+        time.sleep(5)
