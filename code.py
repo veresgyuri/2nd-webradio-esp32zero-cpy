@@ -23,8 +23,9 @@
         
 """
 
-# ver 0.0 - 2026-02-19 Működő minimál kód
-# ver 1.0 - Procedurális eljárásrend - függvényorientált
+# ver 0.00 - 2026-02-19 Működő minimál kód
+# ver 1.00 - Procedurális eljárásrend - függvényorientált
+# ver 1.01 - NET szakadás kezelése - Soft Reset
 
 
 import time
@@ -34,8 +35,10 @@ import socketpool
 import audiobusio
 import audiomp3
 import os
+import supervisor # for 1v01
+# import microcontroller
 
-VERSION = "1.0 - PP-moduláris átírás 2026-02-22"
+VERSION = "1.01 - NET szakadáskor soft reset, 2026-02-22"
 
 # --- Globális konstansok ---
 ssid = os.getenv("CIRCUITPY_WIFI_SSID")
@@ -45,9 +48,9 @@ password = os.getenv("CIRCUITPY_WIFI_PASSWORD")
 
 # Kossuth rádió
 # https://mr-stream.connectmedia.hu//4736//mr1.mp3
-HOST = "mr-stream.connectmedia.hu"
-PORT = 80
-PATH = "/4736/mr1.mp3"
+# HOST = "mr-stream.connectmedia.hu"
+# PORT = 80
+# PATH = "/4736/mr1.mp3"
 
 # Dankó rádió
 # https://mr-stream.connectmedia.hu//4748//mr7.mp3
@@ -69,9 +72,9 @@ PATH = "/4736/mr1.mp3"
 
 # Petőfi rádió
 # https://mr-stream.connectmedia.hu//4738//mr2.mp3
-# HOST = "mr-stream.connectmedia.hu"
-# PORT = 80
-# PATH = "/4738/mr2.mp3"
+HOST = "mr-stream.connectmedia.hu"
+PORT = 80
+PATH = "/4738/mr2.mp3"
 
 # Katolikus - low mp3
 # http://katolikusradio.hu:9000/live_low.mp3
@@ -185,12 +188,11 @@ def stream_radio(pool, host, port, path):
         print("Takarítás...")
         if audio:
             audio.stop()
-            audio.deinit() # Kerregés ellen!
+            audio.deinit() # Kerregés ellen! (?)
         if sock:
             sock.close()
 
 # --- FŐ PROGRAM (MAIN LOOP) ---
-# Nézd meg, mennyivel tisztább lett!
 pool = socketpool.SocketPool(wifi.radio)
 
 while True:
@@ -198,10 +200,12 @@ while True:
         # Ha van net, mehet a zene
         stream_radio(pool, HOST, PORT, PATH)
         
-        # Ha a stream_radio visszatér (megszakadt), várunk picit
-        print("Újraindítás 3 mp múlva...")
-        time.sleep(3)
+        # Ha a stream_radio visszatér (megszakadt)
+        print("Soft reset...")
+        supervisor.reload() #1v01
+        # time.sleep(3) #?
+        # microcontroller.reset() # HARD RESET! (?)
     else:
-        # Ha nincs net, várunk többet
+        # Ha nincs NET - várunk és újra próbáljuk
         print("Várakozás WiFi-re...")
         time.sleep(5)
