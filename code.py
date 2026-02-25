@@ -21,11 +21,12 @@
 │            │
 └────────────┘
         
-"""
+*** https://github.com/veresgyuri/2nd-webradio-esp32zero-cpy """
 
-# ver 0.00 - 2026-02-19 Működő minimál kód
+# ver 0.00 - 2026-02-19 Működő minimál kód -> archived
 # ver 1.00 - Procedurális eljárásrend - függvényorientált
 # ver 1.01 - NET szakadás kezelése - Soft Reset
+# ver 1.02 - WiFi TX PWR korlát | 0,2 sec sleep - proci kimélés
 
 
 import time
@@ -35,10 +36,10 @@ import socketpool
 import audiobusio
 import audiomp3
 import os
-import supervisor # for 1v01
-# import microcontroller
+import supervisor # from 1v01
+import microcontroller # from 1v02
 
-VERSION = "1.01 - NET szakadáskor soft reset, 2026-02-22"
+VERSION = "1.02 - TX PWR | 0,2 sleep, 2026-02-25"
 
 # --- Globális konstansok ---
 ssid = os.getenv("CIRCUITPY_WIFI_SSID")
@@ -46,67 +47,67 @@ password = os.getenv("CIRCUITPY_WIFI_PASSWORD")
 
 # Rádió szerver adatai (szétbontva)
 
-# Kossuth rádió
+# NAME = "Kossuth rádió"
 # https://mr-stream.connectmedia.hu//4736//mr1.mp3
 # HOST = "mr-stream.connectmedia.hu"
 # PORT = 80
 # PATH = "/4736/mr1.mp3"
 
-# Dankó rádió
+# NAME = "Dankó rádió"
 # https://mr-stream.connectmedia.hu//4748//mr7.mp3
 # HOST = "mr-stream.connectmedia.hu"
 # PORT = 80
 # PATH = "/4748/mr7.mp3"
 
-# Bartók rádió
+# NAME = "Bartók rádió"
 # https://mr-stream.connectmedia.hu//4741//mr3.mp3
 # HOST = "mr-stream.connectmedia.hu"
 # PORT = 80
 # PATH = "/4741/mr3.mp3"
 
-# Szakcsi rádió - Jazz
+# NAME = "Szakcsi rádió - Jazz"
 # https://mr-stream.connectmedia.hu//4691//mr9.mp3
 # HOST = "mr-stream.connectmedia.hu"
 # PORT = 80
 # PATH = "/4691/mr9.mp3"
 
-# Petőfi rádió
+# NAME = "Petőfi rádió"
 # https://mr-stream.connectmedia.hu//4738//mr2.mp3
-HOST = "mr-stream.connectmedia.hu"
-PORT = 80
-PATH = "/4738/mr2.mp3"
+# HOST = "mr-stream.connectmedia.hu"
+# PORT = 80
+# PATH = "/4738/mr2.mp3"
 
-# Katolikus - low mp3
+# NAME = "Katolikus - low mp3"
 # http://katolikusradio.hu:9000/live_low.mp3
 # HOST = "81.0.119.219"
 # PORT = 9000
 # PATH = "/live_low.mp3"
 
-# Katolikus - világzene
+# NAME = "Katolikus - világzene"
 # http://katolikusradio.hu:9000/vilagzene
 # HOST = "81.0.119.219"
 # PORT = 9000
 # PATH = "/vilagzene"
 
-# Katolikus - Jazz, dixie
+# NAME = "Katolikus - Jazz, dixie"
 # http://www.katolikusradio.hu:9000/jazz_dixie
 # HOST = "81.0.119.219"
 # PORT = 9000
 # PATH = "/jazz_dixie"
 
-# Szépvíz FM - Csíkszépvíz
+NAME = "Szépvíz FM - Csíkszépvíz"
 # http://86.123.109.20:8000/;stream.mp3
-# HOST = "86.123.109.20"
-# PORT = 8000
-# PATH = "/;stream.mp3"
+HOST = "86.123.109.20"
+PORT = 8000
+PATH = "/;stream.mp3"
 
-# Fun FM - Csíkszereda
+# NAME = "Fun FM - Csíkszereda"
 # http://82.78.114.176:8000/funfm.mp3
 # HOST = "82.78.114.176"
 # PORT = 8000
 # PATH = "/funfm.mp3"
 
-# Sansz FM
+# NAME = "Sansz FM"
 # HOST = "91.82.85.44"
 # PORT = 9056
 # PATH = "/;stream.mp3"
@@ -116,15 +117,19 @@ PIN_BCLK = board.IO8
 PIN_LRCK = board.IO9
 PIN_DIN  = board.IO7
 
-print("--- ESP32-S3 Zero Webrádió (Socket mód) ---")
-print("Ver.:", VERSION, "\n")
+print("\n", "--- ESP32-S3 Zero Webrádió (Socket mód) ---")
+print("verzió:", VERSION, "\n")
 
 # --- 1. WiFi kezelés ---
 def ensure_wifi():
     """Ellenőrzi a kapcsolatot, és ha nincs, csatlakozik."""
+    wifi.radio.tx_power = 8.5 # 1v02 - WiFi adóteljesítmény korlátozva 8,5 dBm-re (7mW vs. 100mW)
     if wifi.radio.connected:
+        print(f"Beállított WiFi teljesítmény: {wifi.radio.tx_power} dBm") # 1v02
+        print(f"WiFi kapcsolódva: {ssid}...") # 1v02
+        print(f"CPU hőmérséklet: {microcontroller.cpu.temperature:.1f} °C") # 1v02
         return True
-        
+            
     print(f"Csatlakozás WiFi-hez: {ssid}...")
     try:
         wifi.radio.connect(ssid, password)
@@ -151,6 +156,7 @@ def stream_radio(pool, host, port, path):
     
     try:
         print(f"Csatlakozás a szerverhez: {host}:{port}")
+        print(f"Webrádió: {NAME}")
         sock = pool.socket(pool.AF_INET, pool.SOCK_STREAM)
         sock.settimeout(10)
         sock.connect((host, port))
@@ -178,7 +184,8 @@ def stream_radio(pool, host, port, path):
         audio.play(mp3_stream)
         
         while audio.playing:
-            pass # Itt szól a zene
+            # pass # Itt szól a zene - 1v01-ig
+            time.sleep(0.2) # 200 ms pihenőidő - proci kimélés 1v02
             
     except Exception as e:
         print("Stream hiba:", e)
