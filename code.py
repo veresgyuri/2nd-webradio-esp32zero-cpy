@@ -27,6 +27,7 @@
 # ver 1.00 - Procedurális eljárásrend - függvényorientált
 # ver 1.01 - NET szakadás kezelése - Soft Reset
 # ver 1.02 - WiFi TX PWR korlát | 0,2 sec sleep - proci kimélés
+# ver 1.10 - 2026-02-26 stations.json - Szeparált állomáslista
 
 
 import time
@@ -36,81 +37,15 @@ import socketpool
 import audiobusio
 import audiomp3
 import os
-import supervisor # from 1v01
+import supervisor  # from 1v01
 import microcontroller # from 1v02
+import json  # from 1v10
 
-VERSION = "1.02 - TX PWR | 0,2 sleep, 2026-02-26"
+VERSION = "1.10 - JSON lista | 2026-02-26"
 
 # --- Globális konstansok ---
 ssid = os.getenv("CIRCUITPY_WIFI_SSID")
 password = os.getenv("CIRCUITPY_WIFI_PASSWORD")
-
-# Rádió szerver adatai (szétbontva)
-
-# NAME = "Kossuth rádió"
-# https://mr-stream.connectmedia.hu//4736//mr1.mp3
-# HOST = "mr-stream.connectmedia.hu"
-# PORT = 80
-# PATH = "/4736/mr1.mp3"
-
-# NAME = "Dankó rádió"
-# https://mr-stream.connectmedia.hu//4748//mr7.mp3
-# HOST = "mr-stream.connectmedia.hu"
-# PORT = 80
-# PATH = "/4748/mr7.mp3"
-
-# NAME = "Bartók rádió"
-# https://mr-stream.connectmedia.hu//4741//mr3.mp3
-# HOST = "mr-stream.connectmedia.hu"
-# PORT = 80
-# PATH = "/4741/mr3.mp3"
-
-# NAME = "Szakcsi rádió - Jazz"
-# https://mr-stream.connectmedia.hu//4691//mr9.mp3
-# HOST = "mr-stream.connectmedia.hu"
-# PORT = 80
-# PATH = "/4691/mr9.mp3"
-
-# NAME = "Petőfi rádió"
-# https://mr-stream.connectmedia.hu//4738//mr2.mp3
-# HOST = "mr-stream.connectmedia.hu"
-# PORT = 80
-# PATH = "/4738/mr2.mp3"
-
-# NAME = "Katolikus - low mp3"
-# http://katolikusradio.hu:9000/live_low.mp3
-# HOST = "81.0.119.219"
-# PORT = 9000
-# PATH = "/live_low.mp3"
-
-# NAME = "Katolikus - Világzene"
-# http://katolikusradio.hu:9000/vilagzene
-# HOST = "81.0.119.219"
-# PORT = 9000
-# PATH = "/vilagzene"
-
-NAME = "Katolikus - Jazz, dixie"
-# http://www.katolikusradio.hu:9000/jazz_dixie
-HOST = "81.0.119.219"
-PORT = 9000
-PATH = "/jazz_dixie"
-
-# NAME = "Szépvíz FM - Csíkszépvíz"
-# http://86.123.109.20:8000/;stream.mp3
-# HOST = "86.123.109.20"
-# PORT = 8000
-# PATH = "/;stream.mp3"
-
-# NAME = "Fun FM - Csíkszereda"
-# http://82.78.114.176:8000/funfm.mp3
-# HOST = "82.78.114.176"
-# PORT = 8000
-# PATH = "/funfm.mp3"
-
-# NAME = "Sansz FM"
-# HOST = "91.82.85.44"
-# PORT = 9056
-# PATH = "/;stream.mp3"
 
 # Pin kiosztás (ESP32-S3 Zero)
 PIN_BCLK = board.IO8
@@ -119,6 +54,27 @@ PIN_DIN  = board.IO7
 
 print("\n" "--- ESP32-S3 Zero Webrádió (Socket mód) ---")
 print("verzió:", VERSION, "\n")
+
+# --- 0. FÜGGVÉNY: Állomások betöltése ---
+def load_stations():
+    try:
+        with open("stations.json", "r") as f:
+            return json.load(f)
+    except Exception as e:
+        print("Hiba a stations.json betöltésekor:", e)
+        return []
+
+# Állomások betöltése a memóriába
+stations = load_stations()
+if not stations:
+    print("Nincsenek állomások! Állj le.")
+    while True: time.sleep(1)
+
+# Jelenleg fixen az elsőt játsszuk (később itt lesz az index változó az encóderhez)
+current_station_index = 0
+current_station = stations[current_station_index]
+
+print(f"Kiválasztott adó: {current_station['name']}")
 
 # --- 1. WiFi kezelés ---
 def ensure_wifi():
@@ -148,15 +104,20 @@ def init_audio():
         print("I2S Init Hiba:", e)
         return None
 
-# --- 3. FÜGGVÉNY: Stream lejátszása ---
-def stream_radio(pool, host, port, path):
-    """Csatlakozik a szerverhez és lejátssza a streamet."""
+# --- 3. FÜGGVÉNY: Stream lejátszása (Kicsit módosítva a paramétereket) ---
+# Most már nem külön host/port/path-t kér, hanem egy 'station' objektumot
+def stream_radio(pool, station):
     sock = None
     audio = None
     
+    host = station['host']
+    port = station['port']
+    path = station['path']
+    name = station['name']
+    
     try:
-        print(f"Csatlakozás a szerverhez: {host}:{port}")
-        print(f"Webrádió: {NAME}")
+        print(f"Csatlakozás: {host}:{port}")
+        print(f"Webrádió: {name}")
         sock = pool.socket(pool.AF_INET, pool.SOCK_STREAM)
         sock.settimeout(10)
         sock.connect((host, port))
@@ -164,7 +125,7 @@ def stream_radio(pool, host, port, path):
         request = f"GET {path} HTTP/1.0\r\nHost: {host}\r\n\r\n"
         sock.send(bytes(request, "utf-8"))
         
-        # Fejléc átugrása
+        # Fejléc átugrása (Változatlan logika)
         print("Fejléc feldolgozása...")
         buffer = bytearray(1)
         prev_seq = b""
@@ -175,27 +136,24 @@ def stream_radio(pool, host, port, path):
             if b"\r\n\r\n" in prev_seq: break
             if len(prev_seq) > 4: prev_seq = prev_seq[-4:]
 
-        # Audio indítása csak akkor, ha már van adat
         audio = init_audio()
-        if not audio: return # Ha hardver hiba van, kilépünk
+        if not audio: return
 
         print(">>> ZENE INDÍTÁSA <<<")
         mp3_stream = audiomp3.MP3Decoder(sock)
         audio.play(mp3_stream)
         
         while audio.playing:
-            # pass # Itt szól a zene - 1v01-ig
-            time.sleep(0.2) # 200 ms pihenőidő - proci kimélés 1v02
+            time.sleep(0.2)
             
     except Exception as e:
         print("Stream hiba:", e)
     
     finally:
-        # TAKARÍTÁS (Ez fut le mindig, hiba esetén is)
         print("Takarítás...")
         if audio:
             audio.stop()
-            audio.deinit() # Kerregés ellen! (?)
+            audio.deinit()
         if sock:
             sock.close()
 
@@ -204,8 +162,8 @@ pool = socketpool.SocketPool(wifi.radio)
 
 while True:
     if ensure_wifi():
-        # Ha van net, mehet a zene
-        stream_radio(pool, HOST, PORT, PATH)
+        # Itt adjuk át a teljes objektumot
+        stream_radio(pool, current_station)
         
         # Ha a stream_radio visszatér (megszakadt)
         print("Soft reset...")
