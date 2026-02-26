@@ -1,0 +1,15 @@
+[
+  {"name": "Kossuth rádió", "host": "mr-stream.connectmedia.hu", "port": 80, "path": "/4736/mr1.mp3"},
+  {"name": "Dankó rádió", "host": "mr-stream.connectmedia.hu", "port": 80, "path": "/4748/mr7.mp3"},
+  {"name": "Bartók rádió", "host": "mr-stream.connectmedia.hu", "port": 80, "path": "/4741/mr3.mp3"},
+  {"name": "Szakcsi rádió - Jazz", "host": "mr-stream.connectmedia.hu", "port": 80, "path": "/4691/mr9.mp3"},
+  {"name": "Petőfi rádió", "host": "mr-stream.connectmedia.hu", "port": 80, "path": "/4738/mr2.mp3"},
+
+  {"name": "Katolikus - low mp3", "host": "81.0.119.219", "port": 9000, "path": "/live_low.mp3"},
+  {"name": "Katolikus - Világzene", "host": "81.0.119.219", "port": 9000, "path": "/vilagzene"},
+  {"name": "Katolikus - Jazz, dixie", "host": "81.0.119.219", "port": 9000, "path": "/jazz_dixie"},
+
+  {"name": "Szépvíz FM - Csíkszépvíz", "host": "86.123.109.20", "port": 8000, "path": "/;stream.mp3"},
+  {"name": "Fun FM - Csíkszereda", "host": "82.78.114.176", "port": 8000, "path": "/funfm.mp3"},
+  {"name": "Sansz FM", "host": "91.82.85.44", "port": 9056, "path": "/;stream.mp3"}
+]
