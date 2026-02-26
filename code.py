@@ -39,7 +39,7 @@ import os
 import supervisor # from 1v01
 import microcontroller # from 1v02
 
-VERSION = "1.02 - TX PWR | 0,2 sleep, 2026-02-25"
+VERSION = "1.02 - TX PWR | 0,2 sleep, 2026-02-26"
 
 # --- Globális konstansok ---
 ssid = os.getenv("CIRCUITPY_WIFI_SSID")
@@ -83,23 +83,23 @@ password = os.getenv("CIRCUITPY_WIFI_PASSWORD")
 # PORT = 9000
 # PATH = "/live_low.mp3"
 
-# NAME = "Katolikus - világzene"
+# NAME = "Katolikus - Világzene"
 # http://katolikusradio.hu:9000/vilagzene
 # HOST = "81.0.119.219"
 # PORT = 9000
 # PATH = "/vilagzene"
 
-# NAME = "Katolikus - Jazz, dixie"
+NAME = "Katolikus - Jazz, dixie"
 # http://www.katolikusradio.hu:9000/jazz_dixie
-# HOST = "81.0.119.219"
-# PORT = 9000
-# PATH = "/jazz_dixie"
+HOST = "81.0.119.219"
+PORT = 9000
+PATH = "/jazz_dixie"
 
-NAME = "Szépvíz FM - Csíkszépvíz"
+# NAME = "Szépvíz FM - Csíkszépvíz"
 # http://86.123.109.20:8000/;stream.mp3
-HOST = "86.123.109.20"
-PORT = 8000
-PATH = "/;stream.mp3"
+# HOST = "86.123.109.20"
+# PORT = 8000
+# PATH = "/;stream.mp3"
 
 # NAME = "Fun FM - Csíkszereda"
 # http://82.78.114.176:8000/funfm.mp3
@@ -117,7 +117,7 @@ PIN_BCLK = board.IO8
 PIN_LRCK = board.IO9
 PIN_DIN  = board.IO7
 
-print("\n", "--- ESP32-S3 Zero Webrádió (Socket mód) ---")
+print("\n" "--- ESP32-S3 Zero Webrádió (Socket mód) ---")
 print("verzió:", VERSION, "\n")
 
 # --- 1. WiFi kezelés ---
@@ -148,7 +148,7 @@ def init_audio():
         print("I2S Init Hiba:", e)
         return None
 
-# --- 3. FÜGGVÉNY: Stream lejátszása (A 'munkás' rész) ---
+# --- 3. FÜGGVÉNY: Stream lejátszása ---
 def stream_radio(pool, host, port, path):
     """Csatlakozik a szerverhez és lejátssza a streamet."""
     sock = None
@@ -210,8 +210,6 @@ while True:
         # Ha a stream_radio visszatér (megszakadt)
         print("Soft reset...")
         supervisor.reload() #1v01
-        # time.sleep(3) #?
-        # microcontroller.reset() # HARD RESET! (?)
     else:
         # Ha nincs NET - várunk és újra próbáljuk
         print("Várakozás WiFi-re...")
