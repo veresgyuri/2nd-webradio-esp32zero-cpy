@@ -28,35 +28,63 @@ EC-11      USB-C            MAX98357a
 # ver 1.01 - NET szakadás kezelése - Soft Reset
 # ver 1.02 - WiFi TX PWR korlát | 0,2 sec sleep - proci kimélés
 # ver 1.10 - 2026-02-26 stations.json - Szeparált állomáslista
-# ver 1.20 - 2026-02-26 Encoderes csatornaváltás | CH nr. to NVM  
+# ver 1.20 - 2026-02-26 Encoderes csatornaváltás | CH nr. to NVM
+# ver 1.21 - dprint-DEBUG bevezetés | free RAM monitorozás | PEP 8 
 
-import time
-import board
-import wifi
-import socketpool
-import audiobusio
-import audiomp3
-import os
-import supervisor # from 1v01 
-import microcontroller # from 1v02 | 1v20 NVM
+# Standard
+import gc # from 1.21
 import json # from 1v10
-import rotaryio
+import os
+import time
 
-VERSION = "1.20 - NVM Memory | 2026-02-26"
+# Hardware / core
+import audiobusio
+import board
+import microcontroller # from 1v02 | 1v20 NVM
+import rotaryio # from 1.20
 
-# --- Globális változók ---
-ssid = os.getenv("CIRCUITPY_WIFI_SSID")
-password = os.getenv("CIRCUITPY_WIFI_PASSWORD")
+# System
+import supervisor # from 1v01 
 
-PIN_BCLK = board.IO8
-PIN_LRCK = board.IO9
-PIN_DIN  = board.IO7
+# Network
+import socketpool
+import wifi
 
-# Enkóder
-encoder = rotaryio.IncrementalEncoder(board.IO11, board.IO12)
+# High-level
+import audiomp3
+
+# --- KONFIGURÁCIÓ ÉS VERZIÓ ---
+VERSION = "1.21 - PEP 8 | DEBUG | RAM 2026-02-27"
+DEBUG = True  # Ha False - nem ír ki semmit a dprint
+
+# --- GLOBÁLIS KONSTANSOK (Hálózat) ---
+SSID = os.getenv("CIRCUITPY_WIFI_SSID")
+PASSWORD = os.getenv("CIRCUITPY_WIFI_PASSWORD")
+
+# --- PIN DEFINÍCIÓK ---
+# Audio I2S
+PIN_I2S_BCLK = board.IO8
+PIN_I2S_LRCK = board.IO9
+PIN_I2S_DIN  = board.IO7
+
+# Rotary enkóder
+PIN_ENC_S1 = board.IO11
+PIN_ENC_S2 = board.IO12
+
+# --- SEGÉDFÜGGVÉNY ---
+def dprint(*args, **kwargs):
+    """ Soros monitorra iratás kezelése """
+    if DEBUG:
+        print(*args, **kwargs)
+
+# --- HARDVER INICIALIZÁLÁS ---
+# Enkóder létrehozása a definiált lábakkal
+encoder = rotaryio.IncrementalEncoder(PIN_ENC_S1, PIN_ENC_S2)
 last_position = 0
 
-print("\n" f"--- ESP32-S3 WebRadio {VERSION} ---")
+
+# --- INDULÁS ---
+dprint("\n" f"--- ESP32-S3 WebRadio {VERSION} ---")
 
 # --- 0. Webrádiók ---
 def load_stations():
@@ -65,12 +93,12 @@ def load_stations():
         with open("stations.json", "r") as f:
             return json.load(f)
     except Exception as e:
-        print("JSON hiba:", e)
+        dprint("JSON hiba:", e)
         return []
 
 stations = load_stations()
 if not stations:
-    print("Hiba: Üres vagy hiányzó stations.json!")
+    dprint("Hiba: Üres vagy hiányzó stations.json!")
     while True: time.sleep(1)
 
 # --- NVM KEZELÉS (Memória beolvasása) ---
@@ -83,33 +111,35 @@ if saved_index >= len(stations):
     microcontroller.nvm[0] = 0 # Javítjuk a memóriában is
 
 current_index = saved_index
-print(f"Visszatérés a {current_index}. állomáshoz...")
+dprint(f"Visszatérés a {current_index}. állomáshoz...")
 
 # --- 1. WiFi ---
 def ensure_wifi():
-    """ Ellenőrzi a kapcsolatot, és ha nincs, csatlakozik """ 
+    """ Takarít, ellenőrzi a kapcsolatot, és ha nincs - csatlakozik """
+    gc.collect() # from 1v21 Kényszerített takarítás. 
     wifi.radio.tx_power = 8.5 # 1v02 - WiFi adóteljesítmény korlát 8,5 dBm-re (7mW vs. 100mW) 
     if wifi.radio.connected:
-        print(f"Beállított WiFi teljesítmény: {wifi.radio.tx_power} dBm") # 1v02
-        print(f"CPU hőmérséklet: {microcontroller.cpu.temperature:.1f} °C") # 1v02 
-        print(f"WiFi kapcsolódva: {ssid}...") # 1v02
+        dprint(f"Beállított WiFi teljesítmény: {wifi.radio.tx_power} dBm") # 1v02
+        dprint(f"Szabad memória: {gc.mem_free()} byte")
+        dprint(f"CPU hőmérséklet: {microcontroller.cpu.temperature:.1f} °C") # 1v02 
+        dprint(f"WiFi kapcsolódva: {SSID}...") # 1v02
         return True
-    print(f"Csatlakozás: {ssid}...")
+    dprint(f"Csatlakozás: {SSID}...")
     try:
-        wifi.radio.connect(ssid, password)
-        print("WiFi OK! IP:", wifi.radio.ipv4_address)
+        wifi.radio.connect(SSID, PASSWORD)
+        dprint("WiFi OK! IP:", wifi.radio.ipv4_address)
         return True
     except Exception as e:
-        print("WiFi hiba:", e)
+        dprint("WiFi hiba:", e)
         return False
 
 # --- 2. Audio ---
 def init_audio():
     """ Létrehozza és visszaadja az I2S objektumot """ 
     try:
-        return audiobusio.I2SOut(bit_clock=PIN_BCLK, word_select=PIN_LRCK, data=PIN_DIN)
+        return audiobusio.I2SOut(bit_clock=PIN_I2S_BCLK, word_select=PIN_I2S_LRCK, data=PIN_I2S_DIN)
     except Exception as e:
-        print("I2S hiba:", e)
+        dprint("I2S hiba:", e)
         return None
 
 # --- 3. Stream ---
@@ -127,7 +157,7 @@ def stream_radio(pool, station_data):
     name = station_data['name']
     
     try:
-        print(f"Adó: {name}")
+        dprint(f"Adó: {name}")
         sock = pool.socket(pool.AF_INET, pool.SOCK_STREAM)
         sock.settimeout(10)
         sock.connect((host, port))
@@ -150,7 +180,8 @@ def stream_radio(pool, station_data):
         mp3_stream = audiomp3.MP3Decoder(sock)
         audio.play(mp3_stream)
         
-        print(">>> LEJÁTSZÁS... <<<")
+        dprint(">>> LEJÁTSZÁS... <<<")
+        dprint(f"Szabad memória: {gc.mem_free()} byte")
         
         # Enkóder szinkronizálás
         encoder.position = current_index
@@ -165,7 +196,7 @@ def stream_radio(pool, station_data):
                 # --- NVM MENTÉS ---
                 # Azonnal beírjuk a memóriába az új számot
                 microcontroller.nvm[0] = current_index 
-                print(f"Mentve NVM-be: {current_index}")
+                dprint(f"Mentve NVM-be: {current_index}")
                 
                 manual_switch = True
                 audio.stop()
@@ -174,7 +205,7 @@ def stream_radio(pool, station_data):
             time.sleep(0.05)
             
     except Exception as e:
-        print("Hiba stream közben:", e)
+        dprint("Hiba stream közben:", e)
         manual_switch = False
     
     finally:
@@ -197,15 +228,15 @@ while True:
         
         if user_switched:
             # Ha a felhasználó váltott, gyorsan megyünk tovább
-            print("Kézi váltás...")
+            dprint("Kézi váltás...")
             time.sleep(0.5)
         else:
             # Ha HIBA volt (NET szakadás) - jöhet a Soft Reset
             # Mivel az NVM-ben benne van az index, ugyanide térünk vissza!
-            print("Hiba -> SOFT RESET (Index megőrizve)")
+            dprint("Hiba -> SOFT RESET (Index megőrizve)")
             # time.sleep(1) #1v20 ---- kell ez?
             supervisor.reload() #1v01
             
     else:
-        print("Nincs WiFi, újrapróbálás 5mp múlva...")
+        dprint("Nincs WiFi, újrapróbálás 5mp múlva...")
         time.sleep(5)
