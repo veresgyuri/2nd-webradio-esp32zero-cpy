@@ -1,42 +1,47 @@
 # 📻 Webrádió (ESP32-S3-Zero + CircuitPython)
 
-Ez a projekt egy egyszerű, otthon is könnyen megépíthető internetes rádiót valósít meg.
+Ez a projekt egy egyszerű, otthon is könnyen megépíthető internetes rádiót valósít meg.  
 A célja, hogy kevés és olcsó alkatrészek segítségével online rádióadókat hallgathassunk.
 
 A kód **CircuitPython** nyelven íródott, így a módosítása és használata kezdők számára is egyszerű.
 
 ## 🛠️ Hogyan épül fel?
 
-A rendszer szíve egy ESP32 kártya, amely az internetről letölti a zenei adatfolyamot, és egy digitális-analóg átalakítón keresztül hanggá alakítja (1v02)
+A rendszer szíve egy ESP32 kártya, amely az internetről letölti a zenei adatfolyamot, és egy digitális-analóg átalakítón keresztül hanggá alakítja.
 
 ![Működési infografika](images/1v02_infografika.png)
+  1v02 - Állomás váltás csak a szoftverből.
 
-Beépítésre került egy 'tekerős nyomógomb' ami az állomásváltást és az első éllomásra ugrást kezeli (1v22)
-
-![Működési infografika](images/1v22_infografika.png)
+1v22 - Beépítésre került egy 'tekerős nyomógomb' ami az állomásváltást és az első állomásra ugrást kezeli.
+![Működési infografika](images/1v22_infografika.png)  
 
 ### Szükséges eszközök:
-*   **Vezérlő:** ESP32-Zero / S3
+*   **Vezérlő:** ESP32-S3/zero
 *   **Hangkártya (DAC):** MAX98357a
 *   **Rotary enkóder:** EC-01
 *   **Potméter:** 56 Ohm / 1W
 *   **Hangszóró:** 8 Ohm / 1W
-*   **Szoftver:** CircuitPython 10.x
+*   **Szoftver:** CircuitPython 10.x.x
 
 ## 🚀 Telepítés 3 lépésben
 
-1.  **CircuitPython telepítése:**
-    Csatlakoztasd az ESP32-t a számítógéphez, és telepítsd rá a megfelelő [CircuitPython](https://circuitpython.org/) rendszert.
+1.  **CircuitPython firmware telepítése:**
+    Csatlakoztasd az ESP32-t a számítógéphez, és telepítsd rá a lapkának megfelelő [CircuitPython](https://circuitpython.org/downloads) rendszert.
     Ekkor megjelenik egy `CIRCUITPY` nevű meghajtó a számítógépeden (mint egy pendrive).
 
 3.  **Fájlok másolása:**
-    Töltsd le ezt a repót (vagy a ZIP-et), és másold át a tartalmát a `CIRCUITPY` meghajtó gyökerébe.
+    Ha akarod, töltsd le ezt a repót (vagy a ZIP-et), és másold át a `CIRCUITPY` meghajtó gyökerébe.
+    De a működéshez csak erre a három filére lesz szükséged:
+    ![Szükséges filék](images/need_this_3_files.png)  
 
-4.  **Beállítás (Wi-Fi & Állomáslista):**
-    A `settings.toml` fájlban add meg a saját Wi-Fi adataidat
+5.  **Beállítás (Wi-Fi & Állomáslista):**
     A kedvenc rádióállomásaid adatai írd be a `stations.json` fájlba.
+    A `settings.toml` fájlban add meg a saját Wi-Fi adataidat.<br>
+    A formátum:  
+    CIRCUITPY_WIFI_SSID = "your ssid name"  
+    CIRCUITPY_WIFI_PASSWORD = "your pwd"
 
 ## ⚙️ Használat
 
 A bekapcsolás után az eszköz automatikusan csatlakozik a megadott Wi-Fi hálózatra és elindítja a lejátszást.
-Az állomásokat az enkóder tekerésével tudod váltani. Megnyomva újraindul az eszkőz és a lista első állomására lép.
+Az állomásokat az enkóder tekerésével tudod váltani. A tekerőgombot megnyomva újraindul az eszkőz és a lista első állomására ugrik.
