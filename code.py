@@ -34,20 +34,20 @@ EC-11            USB-C           MAX98357a
 
 # --- MODULOK ---
 # Standard
-import gc # from 1.21
-import json # from 1v10
+import gc  # from 1.21
+import json  # from 1v10
 import os
 import time
 
 # Hardware / core
 import audiobusio
 import board
-import microcontroller # from 1v02 | 1v20 NVM
-import rotaryio # from 1.20
+import microcontroller  # from 1v02 | 1v20 NVM
+import rotaryio  # from 1.20
 import digitalio  # <-- ÚJ: KEY kezeléshez
 
 # System
-import supervisor # from 1v01 
+import supervisor  # from 1v01
 
 # Network
 import socketpool
@@ -68,7 +68,7 @@ PASSWORD = os.getenv("CIRCUITPY_WIFI_PASSWORD")
 # Audio I2S
 PIN_I2S_BCLK = board.IO8
 PIN_I2S_LRCK = board.IO9
-PIN_I2S_DIN  = board.IO7
+PIN_I2S_DIN = board.IO7
 
 # Rotary enkóder
 PIN_ENC_S1 = board.IO11
@@ -76,10 +76,13 @@ PIN_ENC_S2 = board.IO12
 PIN_ENC_KEY = board.IO10
 
 # --- SEGÉDFÜGGVÉNY ---
+# pylint: disable=invalid-name
+
 def dprint(*args, **kwargs):
     """ Soros monitorra iratás kezelése """
     if DEBUG:
         print(*args, **kwargs)
+
 
 # --- HARDVER INICIALIZÁLÁS ---
 # Enkóder létrehozása a definiált lábakkal
@@ -99,6 +102,8 @@ KEY_DEBOUNCE_S = 0.05  # 50 ms
 dprint("\n" f"--- ESP32-S3 WebRadio {VERSION} ---")
 
 # --- 0. Webrádiók ---
+
+
 def load_stations():
     """ Állomások betöltése """
     try:
@@ -108,10 +113,12 @@ def load_stations():
         dprint("JSON hiba:", e)
         return []
 
+
 stations = load_stations()
 if not stations:
     dprint("Hiba: Üres vagy hiányzó stations.json!")
-    while True: time.sleep(1)
+    while True:
+        time.sleep(1)
 
 # --- NVM KEZELÉS (Memória beolvasása) ---
 # Kiolvassuk az első byte-ot (0. cím)
@@ -120,21 +127,26 @@ saved_index = microcontroller.nvm[0]
 # Ellenőrzés: Ha a mentett szám nagyobb, mint a lista hossza (vagy szemét van benne), nullázzuk
 if saved_index >= len(stations):
     saved_index = 0
-    microcontroller.nvm[0] = 0 # Javítjuk a memóriában is
+    microcontroller.nvm[0] = 0  # Javítjuk a memóriában is
 
 current_index = saved_index
 dprint(f"Visszatérés a {current_index}. állomáshoz...")
 
 # --- 1. WiFi ---
+
+
 def ensure_wifi():
     """ Takarít, ellenőrzi a kapcsolatot, és ha nincs - csatlakozik """
-    gc.collect() # from 1v21 Kényszerített takarítás. 
-    wifi.radio.tx_power = 8.5 # 1v02 - WiFi adóteljesítmény korlát 8,5 dBm-re (7mW vs. 100mW) 
+    gc.collect()  # from 1v21 Kényszerített takarítás.
+    # 1v02 - WiFi adóteljesítmény korlát 8,5 dBm-re (7mW vs. 100mW)
+    wifi.radio.tx_power = 8.5
     if wifi.radio.connected:
-        dprint(f"Beállított WiFi teljesítmény: {wifi.radio.tx_power} dBm") # 1v02
+        # 1v02
+        dprint(f"Beállított WiFi teljesítmény: {wifi.radio.tx_power} dBm")
         dprint(f"Szabad memória: {gc.mem_free()} byte")
-        dprint(f"CPU hőmérséklet: {microcontroller.cpu.temperature:.1f} °C") # 1v02 
-        dprint(f"WiFi kapcsolódva: {SSID}...") # 1v02
+        # 1v02
+        dprint(f"CPU hőmérséklet: {microcontroller.cpu.temperature:.1f} °C")
+        dprint(f"WiFi kapcsolódva: {SSID}...")  # 1v02
         return True
     dprint(f"Csatlakozás: {SSID}...")
     try:
@@ -146,8 +158,10 @@ def ensure_wifi():
         return False
 
 # --- 2. Audio ---
+
+
 def init_audio():
-    """ Létrehozza és visszaadja az I2S objektumot """ 
+    """ Létrehozza és visszaadja az I2S objektumot """
     try:
         return audiobusio.I2SOut(bit_clock=PIN_I2S_BCLK, word_select=PIN_I2S_LRCK, data=PIN_I2S_DIN)
     except Exception as e:
@@ -155,46 +169,52 @@ def init_audio():
         return None
 
 # --- 3. Stream ---
+
+
 def stream_radio(pool, station_data):
     """ Nem külön host/port/path, hanem egy 'station' objektum """
     global last_position, current_index, last_key_state
-    
+
     sock = None
     audio = None
-    manual_switch = False 
-    
+    manual_switch = False
+
     host = station_data['host']
     port = station_data['port']
     path = station_data['path']
     name = station_data['name']
-    
+
     try:
         dprint(f"Adó: {name}")
         sock = pool.socket(pool.AF_INET, pool.SOCK_STREAM)
         sock.settimeout(10)
         sock.connect((host, port))
-        
+
         request = f"GET {path} HTTP/1.0\r\nHost: {host}\r\n\r\n"
         sock.send(bytes(request, "utf-8"))
-        
+
         buffer = bytearray(1)
         prev_seq = b""
         while True:
             count = sock.recv_into(buffer, 1)
-            if count == 0: raise Exception("Socket lezárt")
+            if count == 0:
+                raise Exception("Socket lezárt")
             prev_seq += buffer
-            if b"\r\n\r\n" in prev_seq: break
-            if len(prev_seq) > 4: prev_seq = prev_seq[-4:]
+            if b"\r\n\r\n" in prev_seq:
+                break
+            if len(prev_seq) > 4:
+                prev_seq = prev_seq[-4:]
 
         audio = init_audio()
-        if not audio: return False 
+        if not audio:
+            return False
 
         mp3_stream = audiomp3.MP3Decoder(sock)
         audio.play(mp3_stream)
-        
+
         dprint(">>> LEJÁTSZÁS... <<<")
         dprint(f"Szabad memória: {gc.mem_free()} byte")
-        
+
         # Enkóder szinkronizálás
         encoder.position = current_index
         last_position = current_index
@@ -204,19 +224,20 @@ def stream_radio(pool, station_data):
             if position != last_position:
                 # Váltás történt
                 current_index = position % len(stations)
-                
+
                 # --- NVM MENTÉS ---
                 # Azonnal beírjuk a memóriába az új számot
-                microcontroller.nvm[0] = current_index 
+                microcontroller.nvm[0] = current_index
                 dprint(f"Mentve NVM-be: {current_index}")
-                
+
                 manual_switch = True
                 audio.stop()
-                break 
+                break
 
             # --- KEY kezelése: ha lenyomva -> NVM[0]=0 és hard reset ---
             try:
-                current_key_state = key.value  # True = nem nyomott (feltételezve panel pull-up)
+                # True = nem nyomott (feltételezve panel pull-up)
+                current_key_state = key.value
             except Exception:
                 current_key_state = True  # ha valamiért hiba, feltételezzük nem nyomott
 
@@ -245,19 +266,20 @@ def stream_radio(pool, station_data):
             last_key_state = current_key_state
 
             time.sleep(0.05)
-            
+
     except Exception as e:
         dprint("Hiba stream közben:", e)
         manual_switch = False
-    
+
     finally:
         if audio:
             audio.stop()
             audio.deinit()
         if sock:
             sock.close()
-            
+
     return manual_switch
+
 
 # --- FŐ PROGRAM ---
 pool = socketpool.SocketPool(wifi.radio)
@@ -265,9 +287,9 @@ pool = socketpool.SocketPool(wifi.radio)
 while True:
     if ensure_wifi():
         station = stations[current_index]
-        
+
         user_switched = stream_radio(pool, station)
-        
+
         if user_switched:
             # Ha a felhasználó váltott, gyorsan megyünk tovább
             dprint("Kézi váltás...")
@@ -277,8 +299,8 @@ while True:
             # Mivel az NVM-ben benne van az index, ugyanide térünk vissza!
             dprint("Hiba -> SOFT RESET (Index megőrizve)")
             # time.sleep(1) #1v20 ---- kell ez?
-            supervisor.reload() #1v01
-            
+            supervisor.reload()  # 1v01
+
     else:
         dprint("Nincs WiFi, újrapróbálás 5mp múlva...")
         time.sleep(5)
