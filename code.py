@@ -2,24 +2,24 @@
 
 """ ************ KAPCSOLÁSI RAJZ ******************
 
-       TÁPFESZÜLTSÉG
-           REPL         
-            ↓                       
-EC-11      USB-C            MAX98357a
-┌┴┐     ┌────┬──┬────┐     ┌──────────┐ 
- R      │    └──┘ IO7├─────┤DIN   OUT+├─-─-┬─────┐ 
- O -CH+ ┤IO10     IO8├─────┤BCLK      │    │     🔊
- T -CH- ┤IO11     IO9├─────┤LRC       │   ┌┴┐   8Ω/1W  
- A      │         GND├─────┤GND       │   │ ←--──┘
- R      ┤         3V3├──┬──┤Vin       │   └┬┘56R
- Y      │            │  └──┤Gain  OUT-├─---┘ 1W        
-└ ┘     |            │     └──────────┘               
-        │  ESP32-S3  │   Gain to 3V3 -> 6 dB
-        │    zero    │   
-        │            │   Gain NC -> 9 dB 
-        │            │   Gain to GND -> 12dB
-        │            │
-        └────────────┘
+             TÁPFESZÜLTSÉG
+                 REPL         
+                  ↓                       
+EC-11            USB-C           MAX98357a
+┌┴┐         ┌────┬──┬────┐     ┌──────────┐ 
+ R          │    └──┘ IO7├─────┤DIN   OUT+├─-─-┬─────┐ 
+ O ── CH+ ──┤IO11     IO8├─────┤BCLK      │    │     🔊
+ T ── CH- ──┤IO12     IO9├─────┤LRC       │   ┌┴┐   8Ω/1W  
+ A          │         GND├─────┤GND       │   │ ←--──┘
+ R ── KEY ──┤IO10     3V3├──┬──┤Vin       │   └┬┘56R
+ Y          │            │  └──┤Gain  OUT-├─---┘ 1W        
+└ ┘         |            │     └──────────┘               
+            │  ESP32-S3  │   Gain to 3V3 -> 6 dB
+            │    zero    │   
+            │            │   (Gain NC -> 9 dB) 
+            │            │   (Gain to GND -> 12dB)
+            │            │
+            └────────────┘
         
 *** https://github.com/veresgyuri/2nd-webradio-esp32zero-cpy """
 
@@ -28,9 +28,11 @@ EC-11      USB-C            MAX98357a
 # ver 1.01 - NET szakadás kezelése - Soft Reset
 # ver 1.02 - WiFi TX PWR korlát | 0,2 sec sleep - proci kimélés
 # ver 1.10 - 2026-02-26 stations.json - Szeparált állomáslista
-# ver 1.20 - 2026-02-26 Encoderes csatornaváltás | CH nr. to NVM
-# ver 1.21 - dprint-DEBUG bevezetés | free RAM monitorozás | PEP 8 
+# ver 1.20 - 2026-02-26 Enkóderes csatornaváltás | CH nr. to NVM
+# ver 1.21 - dprint-DEBUG bevezetés | free RAM monitorozás | PEP 8
+# ver 1.22 - Enkóder KEY => NVM - 0 és Hard RESET
 
+# --- MODULOK ---
 # Standard
 import gc # from 1.21
 import json # from 1v10
@@ -42,6 +44,7 @@ import audiobusio
 import board
 import microcontroller # from 1v02 | 1v20 NVM
 import rotaryio # from 1.20
+import digitalio  # <-- ÚJ: KEY kezeléshez
 
 # System
 import supervisor # from 1v01 
@@ -54,7 +57,7 @@ import wifi
 import audiomp3
 
 # --- KONFIGURÁCIÓ ÉS VERZIÓ ---
-VERSION = "1.21 - PEP 8 | DEBUG | RAM 2026-02-27"
+VERSION = "1.22 - RESET KEY added"
 DEBUG = True  # Ha False - nem ír ki semmit a dprint
 
 # --- GLOBÁLIS KONSTANSOK (Hálózat) ---
@@ -70,6 +73,7 @@ PIN_I2S_DIN  = board.IO7
 # Rotary enkóder
 PIN_ENC_S1 = board.IO11
 PIN_ENC_S2 = board.IO12
+PIN_ENC_KEY = board.IO10
 
 # --- SEGÉDFÜGGVÉNY ---
 def dprint(*args, **kwargs):
@@ -82,6 +86,14 @@ def dprint(*args, **kwargs):
 encoder = rotaryio.IncrementalEncoder(PIN_ENC_S1, PIN_ENC_S2)
 last_position = 0
 
+# KEY inicializálás (minimális beállítás: bemenet, NEM használunk belső pull-t)
+key = digitalio.DigitalInOut(PIN_ENC_KEY)
+key.direction = digitalio.Direction.INPUT
+# Ne állítsunk pull-t (panelről van felhúzó): key.pull = None  -> alapból nincs beállítva
+
+# Key állapotok a debouncinghoz
+last_key_state = True  # feltételezzük: panel felhúzottság miatt 'unpressed' = True
+KEY_DEBOUNCE_S = 0.05  # 50 ms
 
 # --- INDULÁS ---
 dprint("\n" f"--- ESP32-S3 WebRadio {VERSION} ---")
@@ -145,7 +157,7 @@ def init_audio():
 # --- 3. Stream ---
 def stream_radio(pool, station_data):
     """ Nem külön host/port/path, hanem egy 'station' objektum """
-    global last_position, current_index
+    global last_position, current_index, last_key_state
     
     sock = None
     audio = None
@@ -201,7 +213,37 @@ def stream_radio(pool, station_data):
                 manual_switch = True
                 audio.stop()
                 break 
-            
+
+            # --- KEY kezelése: ha lenyomva -> NVM[0]=0 és hard reset ---
+            try:
+                current_key_state = key.value  # True = nem nyomott (feltételezve panel pull-up)
+            except Exception:
+                current_key_state = True  # ha valamiért hiba, feltételezzük nem nyomott
+
+            # Észlelés: True -> False átmenet (nyomás)
+            if (not current_key_state) and last_key_state:
+                # rövid debouncing
+                t0 = time.monotonic()
+                stable = False
+                while (time.monotonic() - t0) < KEY_DEBOUNCE_S:
+                    if key.value:  # ha felengedett, nem stabil nyomás
+                        stable = False
+                        break
+                    stable = True
+                if stable and (not key.value):
+                    dprint("KEY lenyomva: NVM[0]=0, HARD RESET indul...")
+                    try:
+                        microcontroller.nvm[0] = 0
+                    except Exception as e:
+                        dprint("NVM írás hiba:", e)
+                    # kis késleltetés, hogy a NVM írás befejeződjön
+                    time.sleep(0.05)
+                    microcontroller.reset()  # hard reset
+                    # execution nem folytatódik, de ha mégis -> break
+                    break
+
+            last_key_state = current_key_state
+
             time.sleep(0.05)
             
     except Exception as e:
