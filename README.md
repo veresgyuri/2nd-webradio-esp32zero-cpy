@@ -2,7 +2,7 @@
 
 Sorry folks, this repo comes with Hungarian comments only 🙂<br><br>
 Ez a projekt egy egyszerű, otthon is könnyen megépíthető internetes rádiót valósít meg.  
-A célja, hogy kevés és olcsó alkatrészek segítségével online rádióadókat hallgathassunk.
+A célja, hogy kevés és olcsó (~4eFt) alkatrészek segítségével online rádióadókat hallgathassunk.
 
 A kód **CircuitPython** nyelven íródott, így a módosítása és használata kezdők számára is egyszerű.
 
@@ -10,10 +10,12 @@ A kód **CircuitPython** nyelven íródott, így a módosítása és használata
 
 A rendszer szíve egy ESP32 kártya, amely az internetről letölti a zenei adatfolyamot, és egy digitális-analóg átalakítón keresztül hanggá alakítja.
 
-![Működési infografika](images/1v02_infografika.png)
-  1v02 - Állomás váltás csak a szoftverből.
+1v02 - Állomás váltás csak a szoftverből  
 
-1v22 - Beépítésre került egy 'tekerős nyomógomb' ami az állomásváltást és az első állomásra ugrást kezeli.
+![Működési infografika](images/1v02_infografika.png)
+
+1v22 - Beépítésre került egy 'tekerős nyomógomb' ami az állomásváltást és az első állomásra ugrást kezeli  
+
 ![Működési infografika](images/1v22_infografika.png)  
 
 ### Szükséges eszközök:
@@ -38,7 +40,7 @@ A rendszer szíve egy ESP32 kártya, amely az internetről letölti a zenei adat
 5.  **Beállítás (Wi-Fi & Állomáslista):**
     A kedvenc rádióállomásaid adatai írd be a `stations.json` fájlba.
     A `settings.toml` fájlban add meg a saját Wi-Fi adataidat.<br>
-    A legyen a formátum:  
+    Ez legyen a formátum:  
     CIRCUITPY_WIFI_SSID = "your ssid name"  
     CIRCUITPY_WIFI_PASSWORD = "your pwd"
 
