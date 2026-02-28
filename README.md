@@ -1,4 +1,4 @@
-# 📻 Webrádió (ESP32-S3-Zero + CircuitPython)
+# 📻 ESP32-S3-Zero webrádió - CircuitPython
 
 Ez a projekt egy egyszerű, otthon is könnyen megépíthető internetes rádiót valósít meg.  
 A célja, hogy kevés és olcsó alkatrészek segítségével online rádióadókat hallgathassunk.
@@ -31,7 +31,7 @@ A rendszer szíve egy ESP32 kártya, amely az internetről letölti a zenei adat
 
 3.  **Fájlok másolása:**
     Ha akarod, töltsd le ezt a repót (vagy a ZIP-et), és másold át a `CIRCUITPY` meghajtó gyökerébe.
-    De a működéshez csak erre a három filére lesz szükséged:
+    De a működéshez csak erre a három filére lesz szükséged<br>
     ![Szükséges filék](images/need_this_3_files.png)  
 
 5.  **Beállítás (Wi-Fi & Állomáslista):**
