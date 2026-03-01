@@ -34,11 +34,11 @@ A rendszer szíve egy ESP32 kártya, amely az internetről letölti a zenei adat
 
 3.  **Fájlok másolása:**
     Ha akarod, töltsd le ezt a repót (vagy a ZIP-et), és másold át a `CIRCUITPY` meghajtó gyökerébe.
-    De a működéshez csak erre a három filére lesz szükséged<br>
+    De a működéshez csak erre a három fájlra lesz szükséged<br>
     ![Szükséges filék](images/need_this_3_files.png)  
 
 5.  **Beállítás (Wi-Fi & Állomáslista):**
-    A kedvenc rádióállomásaid adatai írd be a `stations.json` fájlba.
+    A kedvenc rádióállomásaid adatait írd be a `stations.json` fájlba.
     A `settings.toml` fájlban add meg a saját Wi-Fi adataidat.<br>
     Ez legyen a formátum:  
     CIRCUITPY_WIFI_SSID = "your ssid name"  
