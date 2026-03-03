@@ -9,7 +9,8 @@
   {"name": "Katolikus - Világzene", "host": "81.0.119.219", "port": 9000, "path": "/vilagzene"},
   {"name": "Katolikus - Jazz, dixie", "host": "81.0.119.219", "port": 9000, "path": "/jazz_dixie"},
 
+  {"name": "Sansz FM", "host": "91.82.85.44", "port": 9056, "path": "/;stream.mp3"},
   {"name": "Szépvíz FM - Csíkszépvíz", "host": "86.123.109.20", "port": 8000, "path": "/;stream.mp3"},
   {"name": "Fun FM - Csíkszereda", "host": "82.78.114.176", "port": 8000, "path": "/funfm.mp3"},
-  {"name": "Sansz FM", "host": "91.82.85.44", "port": 9056, "path": "/;stream.mp3"}
+  {"name": "Csukás meserádió", "host": "mr-stream.connectmedia.hu", "port": 80, "path": "/4611/mr10.mp3"}
 ]
