@@ -32,6 +32,7 @@ EC-11            USB-C           MAX98357a
 # ver 1.21 - dprint-DEBUG bevezetés | free RAM monitorozás | PEP 8
 # ver 1.22 - Enkóder KEY => NVM - 0 és Hard RESET
 # ver 1.30 - 2026-03-03 Refaktorált vezérlés (Procedurális)
+# ver 1.31 - Fejléc átugrás javítva (Típusbiztos, stabilabb)
 
 # --- MODULOK ---
 # Standard
@@ -58,7 +59,7 @@ import wifi
 import audiomp3
 
 # --- KONFIGURÁCIÓ ÉS VERZIÓ ---
-VERSION = "1.30 - Refactored Control"
+VERSION = "1.31 - Header skipping correction"
 DEBUG = True  # Ha False - nem ír ki semmit a dprint
 KEY_DEBOUNCE_S = 0.05  # Gomb pergésmentesítés ideje (mp)
 
@@ -220,24 +221,37 @@ def stream_radio(pool, station_data, enc_obj, key_obj):
     try:
         dprint(f"Adó: {name}")
         
-        # 1. Socket létrehozása és kapcsolódás
+        # 3/1. Socket létrehozása és kapcsolódás
         sock = pool.socket(pool.AF_INET, pool.SOCK_STREAM)
         sock.settimeout(10)
         sock.connect((host, port))
         
-        # 2. HTTP Kérés
+        # 3/2. HTTP Kérés
         request = f"GET {path} HTTP/1.0\r\nHost: {host}\r\n\r\n"
         sock.send(bytes(request, "utf-8"))
         
-        # 3. Fejléc átugrása (Header skipping) - EZ A KRITIKUS RÉSZ, VÁLTOZATLAN!
+        # 3/3. Fejléc átugrása (Javított, típusbiztos 1v31)
         buffer = bytearray(1)
-        prev_seq = b""
+        prev = bytearray()
+
         while True:
-            count = sock.recv_into(buffer, 1)
-            if count == 0: raise Exception("Socket lezárt (Remote end closed)")
-            prev_seq += buffer
-            if b"\r\n\r\n" in prev_seq: break
-            if len(prev_seq) > 4: prev_seq = prev_seq[-4:]
+            # 1 bájtot olvasunk a bufferbe
+            n = sock.recv_into(buffer, 1)
+            
+            # Ha a szerver lezárta a kapcsolatot
+            if n == 0:
+                raise Exception("Socket lezárt (Remote end closed)")
+
+            # Hozzáfűzzük az előzményekhez
+            prev += buffer
+            
+            # Keressük a dupla sortörést (\r\n\r\n)
+            if b"\r\n\r\n" in prev:
+                break
+
+            # Csak az utolsó 4 bájtot tároljuk, hogy ne fogyjon a memória
+            if len(prev) > 4:
+                prev = prev[-4:]
 
         # 4. Audio hardver és dekóder indítása
         audio = init_audio()
