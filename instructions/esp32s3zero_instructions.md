@@ -1,8 +1,8 @@
 # ESP32‑S3‑Zero  
 
-<img src="../images/esp32_s3_zero_m.png" alt="The board" width="80">
+<img src="../images/esp32_s3_zero_m.png" alt="The -M board" width="200">
 
-> ⚠️ Az intrukció forrásai:
+> ⚠️ Az instrukció forrásai:
 > - https://www.waveshare.com/wiki/ESP32-S3-Zero
 > - https://documentation.espressif.com/esp32-s3_datasheet_en.pdf
 > - https://documentation.espressif.com/esp32-s3_technical_reference_manual_en.pdf
