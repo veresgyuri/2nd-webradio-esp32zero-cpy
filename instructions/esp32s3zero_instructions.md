@@ -1,4 +1,14 @@
-# ESP32‑S3‑Zero
+# ESP32‑S3‑Zero  
+
+<img src="../images/esp32_s3_zero_m.png" alt="The board" width="80">
+
+> ⚠️ Az intrukció forrásai:
+> - https://www.waveshare.com/wiki/ESP32-S3-Zero
+> - https://documentation.espressif.com/esp32-s3_datasheet_en.pdf
+> - https://documentation.espressif.com/esp32-s3_technical_reference_manual_en.pdf
+
+## NECESSARY DATA FOR THE AGENT
+
 ### GPIO Pins and Functions (GPIO lábak és funkciók):
   *English:* The ESP32-S3-Zero module exposes 24 GPIOs (13+11) from the ESP32-S3FH4R2 chip. Each GPIO can be multiplexed with various functions (digital I/O, ADC, I2C, I2S, SPI, PWM/LEDC, etc.) according to the chip datasheet. In total the S3 supports up to 4 SPI, 2 I2C, 2 I2S, 3 UART and 2 ADC interfaces on these GPIOs<br>
 
@@ -163,4 +173,4 @@ GPIO0, GPIO19, GPIO20, GPIO21, GPIO33–37, GPIO45, GPIO46
 
 Prefer:
 
-GPIO1–14, (GPIO15-18 & GPIO38-42 - but no side PINs on the PCB)
+GPIO1–13, (GPIO14-18 & GPIO38-42 - Safe electrically, but hard to solder beacuse no side PINs on the PCB)
