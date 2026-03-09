@@ -31,7 +31,9 @@ applyTo: '**/*esp32-s3-zero*'
 ## NECESSARY DATA FOR THE AGENT
 ## GPIO Reference
 
-ESP32-S3 uses a flexible GPIO matrix. Digital peripherals such as SPI, I2C, I2S, PWM, and UART can be routed to almost any GPIO that is not internally reserved.
+ESP32-S3 uses a flexible GPIO matrix.  
+Digital peripherals such as SPI, I2C, I2S, PWM, and UART can be routed to almost any GPIO that is not internally reserved.  
+Operating Logic Voltage: 3.3V. Do not connect 5V logic signals directly to any GPIO.
 
 ### ADC mapping
 
