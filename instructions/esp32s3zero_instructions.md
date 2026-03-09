@@ -1,6 +1,27 @@
-# ESP32‑S3‑Zero  
+---
+description: 'ESP32-S3-Zero board hardware and GPIO usage rules for code generation'
+applyTo: '**/*esp32-s3-zero*'
+---
 
-<img src="../images/esp32_s3_zero_m.png" alt="The -M board" width="200">
+# ESP32‑S3‑Zero  
+## EXPLANATION FOR CARBON-BASED DEVELOPERS
+<img src="../images/esp32_s3_zero_m.png" alt="The -M board" width="200">  
+
+<br>
+  ESP32-S3-Zero (without pin header) and ESP32-S3-Zero-M (with pin header) are tiny in size with castellated holes, making them easy to integrate into other host boards. ESP32-S3-Zero comes with an onboard Type-C USB connector, which exposes most of the unused pins in a small form factor. It is equipped with the ESP32-FH4R2 chip, integrated Wi-Fi and BLE5.0, featuring 4MB Flash and 2MB PSRAM. In addition, there are hardware encryption accelerator, RNG, HMAC and Digital Signature modules to meet the safety requirements of IoT and provide rich peripheral interfaces. Moreover, its multiple low-power working modes support most application scenarios such as IoT, mobile devices, wearable electronic devices, and smart homes.  
+  
+- Equipped with Xtensa® 32-bit LX7 dual-core processor, up to 240MHz main frequency.  
+- Supports 2.4GHz Wi-Fi (802.11 b/g/n) and Bluetooth® 5 (LE).  
+- Built-in 512KB of SRAM and 384KB ROM, onboard 4MB Flash memory and 2MB PSRAM.  
+- Castellated module and onboard ceramic antenna, allows soldering direct to carrier boards.  
+- Supports flexible clock, module power supply independent setting, and other controls to realize low power consumption in different scenarios.  
+
+*Magyar:* Az ESP32-S3-Zero (tüskesor nélküli) és az ESP32-S3-Zero-M (tüskesorral ellátott) apró méretű modulok, amelyek könnyen integrálhatók más alaplapokba. Az ESP32-S3-Zero beépített Type-C USB csatlakozóval rendelkezik, amely kis helyigény mellett biztosít hozzáférést a legtöbb nem használt láboz. A modult ESP32-FH4R2 chip hajtja, beépített Wi-Fi és BLE5.0 támogatással, valamint 4MB flash és 2MB PSRAM memóriával rendelkezik. Emellett hardveres titkosítási gyorsító, RNG, HMAC és digitális aláírás modulok is találhatók benne, amelyek megfelelnek az IoT biztonsági követelményeinek és gazdag periféria interfészt kínálnak. Továbbá több alacsony fogyasztású üzemmódja támogatja a legtöbb alkalmazási területet, például az IoT-t, mobil eszközöket, DIY elektronikai eszközöket és az okosotthon megoldásokat.
+
+### GPIO Pins and Functions (GPIO lábak és funkciók):
+  *English:* The ESP32-S3-Zero module exposes 24 GPIOs (13+11) from the ESP32-S3FH4R2 chip. Each GPIO can be multiplexed with various functions (digital I/O, ADC, I2C, I2S, SPI, PWM/LEDC, etc.) according to the chip datasheet. In total the S3 supports up to 4 SPI, 2 I2C, 2 I2S, 3 UART and 2 ADC interfaces on these GPIOs<br>
+
+  *Magyar:* Az ESP32-S3-Zero modul 24 GPIO lábat (13+11) biztosít az S3 chipből. Minden GPIO többfunkciós: digitális I/O, analóg ADC-bemenet, I2C, I2S, SPI, PWM (LEDC) stb. lehet belőle a chip multiplex szerint. Összességében a chip 4 SPI, 2 I2C, 2 I2S, 3 UART és 2 ADC perifériát tesz elérhetővé a GPIO-kon.  
 
 > ⚠️ Az instrukció forrásai:
 > - https://www.waveshare.com/wiki/ESP32-S3-Zero
@@ -8,23 +29,16 @@
 > - https://documentation.espressif.com/esp32-s3_technical_reference_manual_en.pdf
 
 ## NECESSARY DATA FOR THE AGENT
-
-### GPIO Pins and Functions (GPIO lábak és funkciók):
-  *English:* The ESP32-S3-Zero module exposes 24 GPIOs (13+11) from the ESP32-S3FH4R2 chip. Each GPIO can be multiplexed with various functions (digital I/O, ADC, I2C, I2S, SPI, PWM/LEDC, etc.) according to the chip datasheet. In total the S3 supports up to 4 SPI, 2 I2C, 2 I2S, 3 UART and 2 ADC interfaces on these GPIOs<br>
-
-  *Magyar:* Az ESP32-S3-Zero modul 24 GPIO lábat (13+11) biztosít az S3 chipből. Minden GPIO többfunkciós: digitális I/O, analóg ADC-bemenet, I2C, I2S, SPI, PWM (LEDC) stb. lehet belőle a chip multiplex szerint. Összességében a chip 4 SPI, 2 I2C, 2 I2S, 3 UART és 2 ADC perifériát tesz elérhetővé a GPIO-kon.  
-
-
 ## GPIO Reference
 
-The ESP32‑S3 provides a flexible GPIO matrix. Most digital peripherals (SPI, I2C, I2S, PWM, UART) can be routed to almost any GPIO that is not internally reserved.
+ESP32-S3 uses a flexible GPIO matrix. Digital peripherals such as SPI, I2C, I2S, PWM, and UART can be routed to almost any GPIO that is not internally reserved.
 
 ### ADC mapping
 
 ADC1: GPIO1–GPIO10  
 ADC2: GPIO11–GPIO20
 
-GPIO11–13 pins belong to the ADC2 controller, they cannot be used when Wi-Fi is active. If you need analog input in addition to Wi-Fi, use the GPIO1–10 (ADC1) range.
+GPIO11–GPIO13 are connected to ADC2. ADC2 is unavailable when Wi-Fi is active. For analog input with Wi-Fi enabled, use GPIO1–GPIO10 (ADC1).
 
 GPIO14-18 only internal soldering points of the board - without holes
 
