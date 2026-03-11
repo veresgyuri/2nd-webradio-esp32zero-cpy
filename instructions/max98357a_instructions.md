@@ -1,5 +1,5 @@
 ---
-description: 'MAX98357A I2S DAC with mono aplifier - hardware and GPIO usage rules for code generation'
+description: 'MAX98357A I2S DAC with mono aplifier - hardware and PIN usage rules for code generation'
 applyTo: '**/*max98357*'
 ---
 
@@ -9,7 +9,7 @@ applyTo: '**/*max98357*'
 
 *English:* The MAX98357A is a compact, highly efficient Class-D mono amplifier with an I2S interface, ideal for microcontroller projects requiring digital audio output. It combines a digital-to-analog converter (DAC) and an amplifier into a single breakout board. The output is a ~300kHz PWM square wave that is averaged out by the speaker's own coil inductance. Because of this, the device must drive speakers directly and cannot be used as a pre-amplifier for another stage. For optimal performance at 5V, a power supply capable of at least 800mA is recommended.
 
-*Magyar:*  MAX98357A egy kompakt, rendkívül hatékony, I2S interfészű D-osztályú mono erősítő, amely ideális választás mikrokontrolleres projektekhez, ahol digitális hangkimenetre van szükség. Ez az eszköz egyesíti az I2S DAC-ot (digitális-analóg átalakító) és az erősítőt egyetlen apró lapkán. Mivel az erősítő kimeneti jele egy 330 kHz-es PWM négyszögjel, amit a hangszóró tekercsének induktivitása átlagol ki, az eszközt közvetlenül a hangszóróra kell kötni, nem használható előerősítőként egy másik erősítőhöz. A tápellátásnál javasolt legalább 800 mA-es tápegység használata az optimális teljesítmény érdekében.
+*Magyar:*  MAX98357A egy kompakt, rendkívül hatékony, I2S interfészű D-osztályú mono erősítő, amely ideális választás mikrokontrolleres projektekhez, ahol digitális hangkimenetre van szükség. Ez az eszköz egyesíti az I2S DAC-ot (digitális-analóg átalakító) és az erősítőt egyetlen apró lapkán. Mivel az erősítő kimeneti jele egy 330 kHz-es PWM négyszögjel, amit a hangszóró tekercsének induktivitása átlagol ki, az eszközt közvetlenül a hangszóróra kell kötni, nem használható előerősítőként egy másik erősítőhöz. A tápellátáshoz 5VDC mellett javasolt legalább 800 mA-es tápegység használata az optimális teljesítmény érdekében.
 
 ### Key Technical Specifications - Főbb műszaki jellemzők
 *English:*
@@ -20,7 +20,7 @@ applyTo: '**/*max98357*'
 - Outputs: The outputs are "Bridge-Tied," meaning they connect directly to the speaker terminals and should never be connected to ground.  
   
 *Magyar:*
-- Teljesítmény: 3,2 Watt teljesítményt képes leadni egy 4 ohmos hangszórón (5V tápfeszültség és 10% THD mellett).
+- Teljesítmény: 3,2 Watt teljesítményt képes leadni egy 4 Ohmos hangszórón (5V tápfeszültség és 10% THD mellett).
 - Tápfeszültség: Széles tartomány, 2,7V és 5,5V DC között üzemeltethető.
 - Hatékonyság: Mivel D-osztályú (Class-D) vezérlővel rendelkezik, rendkívül hatékony, így kiválóan alkalmas hordozható, akkumulátoros projektekhez.
 - Védelem: Beépített termikus és túláramvédelemmel van ellátva.
@@ -35,11 +35,11 @@ The amplifier does not support analog inputs; it uses the standard I2S digital a
 - SD / MODE Pin: This multi-purpose pin can be used to put the chip into shutdown mode or to select which I2S channel is output (Left, Right, or a stereo average). By default, it outputs a (L+R)/2 stereo mix to mono.
 
 *Magyar:*
-Az erősítő nem használ analóg bemeneteket; kizárólag a szabványos I2S digitális audió protokollt támogatja.
+Az erősítő nem támogat analóg bemeneteket; kizárólag a szabványos I2S digitális audió protokollt támogatja.
 
 - I2S Pinek: Három fő pint használ az adatok fogadásához: LRC (bal/jobb csatorna órajel), BCLK (bit órajel) és DIN (adat bemenet). Külön MCLK órajelre nincs szüksége.
 - Választható erősítés (Gain): A GAIN pin konfigurálásával ötféle erősítési szint állítható be: 3dB, 6dB, 9dB (alapértelmezett), 12dB vagy 15dB.
-- SD / MODE funkció: Ez a többcélú pin használható a chip teljes leállítására (Shutdown), vagy annak kiválasztására, hogy melyik I2S csatornát (bal, jobb vagy a kettő átlaga) továbbítsa a mono kimenetre. Alapértelmezés szerint a sztereó jelet (L+R)/2 módon keveri mono kimenetté.
+- SD / MODE funkció: Ez a többcélú PIN használható a chip teljes leállítására (Shutdown), vagy annak kiválasztására, hogy melyik I2S csatornát (bal, jobb vagy a kettő átlaga) továbbítsa a mono kimenetre. Alapértelmezés szerint a sztereó jelet (L+R)/2 módon keveri mono kimenetté.
 
 > ⚠️ Az instrukció forrásai:
 > - https://cdn-learn.adafruit.com/downloads/pdf/adafruit-max98357-i2s-class-d-mono-amp.pdf
@@ -47,7 +47,7 @@ Az erősítő nem használ analóg bemeneteket; kizárólag a szabványos I2S di
 ---
 ## NECESSARY DATA FOR THE AGENT
 ### PIN Reference
-Dedicated pins
+Dedicated pins;
 
 | PIN    | Function                     |
 | ------ | ---------------------------- |
@@ -55,16 +55,16 @@ Dedicated pins
 | GND    | System ground                |
 | SD     | Shutdown / Mode select       |
 | GAIN   | Gain select                  |
-| DIN    | Data in                      |          
-| BCLK   | Bit Clock                    |
-| LRC    | Left/Right Clock             |
+| DIN    | Data in - I2S                |          
+| BCLK   | Bit Clock - I2S              |
+| LRC    | Left/Right Clock - I2S       |
 
 *Notes:*
 This device does not require a Master Clock (MCLK); if your controller provides one, it can remain disconnected
 
 
 ### GAIN (PIN)
-Manages the amplification levels.
+Manages the amplification levels;
 
 - 15dB: 100K resistor between GAIN and GND.
 - 12dB: GAIN connected directly to GND.
@@ -77,8 +77,7 @@ The system defaults to 9dB if left floating.
 
 
 ### SD / MODE (PIN)
-A multi-functional pin for power management and channel selection.
-
+A multi-functional pin for power management and channel selection;
 
 - Shutdown: Connect to GND (voltage < 0.16V) to disable the chip.
 - Stereo Mix (L+R)/2: Default mode for the breakout (via internal/external resistors).
