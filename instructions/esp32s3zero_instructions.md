@@ -4,10 +4,8 @@ applyTo: '**/*esp32-s3-zero*'
 ---
 
 # ESP32‑S3‑Zero  
-## EXPLANATION FOR CARBON-BASED DEVELOPERS
+## EXPLANATION FOR CARBON-BASED DEVELOPERS 😊
 <img src="../images/esp32_s3_zero_m.png" alt="The -M board" width="200">  
-
-<br>
 
 *English:* ESP32-S3-Zero (without pin header) and ESP32-S3-Zero-M (with pin header) are tiny in size with castellated holes, making them easy to integrate into other host boards. ESP32-S3-Zero comes with an onboard Type-C USB connector, which exposes most of the unused pins in a small form factor. It is equipped with the ESP32-FH4R2 chip, integrated Wi-Fi and BLE5.0, featuring 4MB Flash and 2MB PSRAM. In addition, there are hardware encryption accelerator, RNG, HMAC and Digital Signature modules to meet the safety requirements of IoT and provide rich peripheral interfaces. Moreover, its multiple low-power working modes support most application scenarios such as IoT, mobile devices, wearable electronic devices, and smart homes.  
   
@@ -29,6 +27,7 @@ applyTo: '**/*esp32-s3-zero*'
 > - https://documentation.espressif.com/esp32-s3_datasheet_en.pdf
 > - https://documentation.espressif.com/esp32-s3_technical_reference_manual_en.pdf
 
+---
 ## NECESSARY DATA FOR THE AGENT
 ## GPIO Reference
 
@@ -47,7 +46,6 @@ GPIO14-18 only internal soldering points of the board - without holes
 
 Recommended analog inputs on this board: **GPIO7–GPIO10 or GPIO11–GPIO14** (stable routing, commonly exposed pins).
 
----
 
 # Reserved / dedicated pins
 
@@ -67,7 +65,6 @@ Notes:
 - GPIO19/20 are used by **USB‑CDC**
 - GPIO21 is wired to the **onboard RGB LED**
 
----
 
 # Pins best avoided (but usable if necessary)
 
@@ -85,8 +82,6 @@ JTAG mapping if used:
 | TDO | 40 |
 | TDI | 41 |
 | TMS | 42 |
-
----
 
 # Safe GPIO pool
 
@@ -139,10 +134,10 @@ DOUT → GPIO6
 DIN → GPIO7
 
 ## PWM
-
 Any safe GPIO except:
 
 19, 20, 21, 0
+
 
 ## Analog sensors
 
@@ -150,7 +145,6 @@ Preferred:
 
 GPIO7–GPIO12
 
----
 
 # USB rule
 
@@ -159,7 +153,6 @@ GPIO20 = USB D+
 
 Do not assign these pins to other peripherals.
 
----
 
 # Boot rule
 
@@ -167,7 +160,6 @@ GPIO0 LOW during reset → Download mode.
 
 Avoid circuits that pull GPIO0 low during boot.
 
----
 
 # Built‑in RGB LED
 
@@ -180,7 +172,6 @@ Avoid mixing:
 
 Only one driver should control the LED.
 
----
 
 # Summary
 
