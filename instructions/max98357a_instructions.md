@@ -1,5 +1,5 @@
 ---
-description: 'MAX98357A I2S DAC with mono aplifier - hardware and PIN usage rules for code generation'
+description: 'MAX98357A I2S DAC with mono amplifier - hardware and PIN usage rules for code generation'
 applyTo: '**/*max98357*'
 ---
 
@@ -7,21 +7,21 @@ applyTo: '**/*max98357*'
 ### EXPLANATION FOR CARBON-BASED DEVELOPERS 😊
 <img src="../images/max98357a.png" alt="DAC" width="200">  
 
-*English:* The MAX98357A is a compact, highly efficient Class-D mono amplifier with an I2S interface, ideal for microcontroller projects requiring digital audio output. It combines a digital-to-analog converter (DAC) and an amplifier into a single breakout board. The output is a ~300kHz PWM square wave that is averaged out by the speaker's own coil inductance. Because of this, the device must drive speakers directly and cannot be used as a pre-amplifier for another stage. For optimal performance at 5V, a power supply capable of at least 800mA is recommended.
+*English:* The MAX98357A is a compact, highly efficient Class-D mono amplifier with an I2S interface, ideal for microcontroller projects requiring digital audio output. It combines a digital-to-analog converter (DAC) and an amplifier into a single breakout board. The output is a 330kHz PWM square wave that is averaged out by the speaker's own coil inductance. Because of this, the device must drive speakers directly and cannot be used as a pre-amplifier for another stage. For optimal performance at 5V, a power supply capable of at least 800mA is recommended.
 
-*Magyar:*  MAX98357A egy kompakt, rendkívül hatékony, I2S interfészű D-osztályú mono erősítő, amely ideális választás mikrokontrolleres projektekhez, ahol digitális hangkimenetre van szükség. Ez az eszköz egyesíti az I2S DAC-ot (digitális-analóg átalakító) és az erősítőt egyetlen apró lapkán. Mivel az erősítő kimeneti jele egy 330 kHz-es PWM négyszögjel, amit a hangszóró tekercsének induktivitása átlagol ki, az eszközt közvetlenül a hangszóróra kell kötni, nem használható előerősítőként egy másik erősítőhöz. A tápellátáshoz 5VDC mellett javasolt legalább 800 mA-es tápegység használata az optimális teljesítmény érdekében.
+*Magyar:* A MAX98357A egy kompakt, rendkívül hatékony, I2S interfészű D-osztályú mono erősítő, amely ideális választás mikrokontrolleres projektekhez, ahol digitális hangkimenetre van szükség. Ez az eszköz egyesíti az I2S DAC-ot (digitális-analóg átalakító) és az erősítőt egyetlen apró lapkán. Mivel az erősítő kimeneti jele egy 330 kHz-es PWM négyszögjel, amit a hangszóró tekercsének induktivitása átlagol ki, az eszközt közvetlenül a hangszóróra kell kötni, nem használható előerősítőként egy másik erősítőhöz. A tápellátáshoz 5VDC mellett javasolt legalább 800 mA-es tápegység használata az optimális teljesítmény érdekében.
 
 ### Key Technical Specifications - Főbb műszaki jellemzők
 *English:*
 - Power Output: It is surprisingly powerful for its size, delivering up to 3.2 Watts into a 4-ohm speaker (at 5V power and 10% THD).
-- Voltage Range: It operates on a wide DC voltage range from 2.7V to 5.5V.
+- Voltage Range: It operates on a wide DC voltage range from 2.5V to 5.5V.
 - Efficiency: As a Class-D amplifier, it is extremely efficient, making it perfect for portable and battery-powered projects.
 - Protection: It features built-in thermal and over-current protection.
 - Outputs: The outputs are "Bridge-Tied," meaning they connect directly to the speaker terminals and should never be connected to ground.  
   
 *Magyar:*
 - Teljesítmény: 3,2 Watt teljesítményt képes leadni egy 4 Ohmos hangszórón (5V tápfeszültség és 10% THD mellett).
-- Tápfeszültség: Széles tartomány, 2,7V és 5,5V DC között üzemeltethető.
+- Tápfeszültség: Széles tartomány, 2,5V és 5,5V DC között üzemeltethető.
 - Hatékonyság: Mivel D-osztályú (Class-D) vezérlővel rendelkezik, rendkívül hatékony, így kiválóan alkalmas hordozható, akkumulátoros projektekhez.
 - Védelem: Beépített termikus és túláramvédelemmel van ellátva.
 - Kimenet: A kimenetek "Bridge-Tied" (hídba kötött) kialakításúak, ami azt jelenti, hogy közvetlenül a hangszóróhoz csatlakoznak, nem pedig a földhöz (GND).
@@ -47,21 +47,20 @@ Az erősítő nem támogat analóg bemeneteket; kizárólag a szabványos I2S di
 ---
 ## NECESSARY DATA FOR THE AGENT
 ### PIN Reference
-Dedicated pins;
+Dedicated pins (Aliases in brackets are common silkscreen/code labels)
 
-| PIN    | Function                     |
-| ------ | ---------------------------- |
-| Vin    | Power input 2.5V to 5.5VDC   |
-| GND    | System ground                |
-| SD     | Shutdown / Mode select       |
-| GAIN   | Gain select                  |
-| DIN    | Data in - I2S                |          
-| BCLK   | Bit Clock - I2S              |
-| LRC    | Left/Right Clock - I2S       |
+| PIN    | Function                     | Aliases          |
+| ------ | ---------------------------- | ---------------- |
+| Vin    | Power input 2.5V to 5.5V DC  | (VCC)            |
+| GND    | System ground                |                  |
+| SD     | Shutdown / Mode select       | (SD_MODE)        |
+| GAIN   | Gain select                  |                  |
+| DIN    | Data in - I2S                | (SDATA, DOUT)    |          
+| BCLK   | Bit Clock - I2S              | (SCK, BITCLK)    |
+| LRC    | Left/Right Clock - I2S       | (WS, LRCLK)      |
 
 *Notes:*
 This device does not require a Master Clock (MCLK); if your controller provides one, it can remain disconnected
-
 
 ### GAIN (PIN)
 Manages the amplification levels;
@@ -75,7 +74,6 @@ Manages the amplification levels;
 *Notes:*
 The system defaults to 9dB if left floating.
 
-
 ### SD / MODE (PIN)
 A multi-functional pin for power management and channel selection;
 
@@ -87,4 +85,25 @@ A multi-functional pin for power management and channel selection;
 ### Analog Output
 Speaker Output (+ / -): Bridge-Tied Load (BTL) terminals.
 Critical Constraint: These must be connected directly to the speaker. They alternate polarity and carry a 330kHz PWM signal; they must never be connected to ground or used as a pre-amplifier input.
+
+#### CODE GENERATION LOGIC & RULES
+
+**1. Hardware Interface (I2S):**
+- Always use native hardware I2S peripherals and standard libraries for the target environment (e.g., `driver/i2s.h` for ESP-IDF, `I2S.h` for Arduino, `machine.I2S` for MicroPython, `audiobusio.I2SOut` for CircuitPython). 
+- Never attempt to use software bit-banging for I2S audio generation.
+
+**2. Pin Configuration & MCLK:**
+- Map the three essential pins: BCLK, LRC (WS), and DIN (Data Out from MCU) to the microcontroller's I2S-capable pins.
+- **Crucial:** Do not allocate, configure, or pass an MCLK (Master Clock) pin in the software initialization, as the MAX98357A does not require one. Leave MCLK parameters as `-1`, `None`, or unused depending on the framework.
+
+**3. Audio Data Format:**
+- Configure the I2S peripheral to use the standard **Philips I2S format** (not Left-Justified or Right-Justified, unless specifically modified by hardware resistors).
+- Set the sample rate and bit depth (typically 16-bit or 32-bit) dynamically based on the user's specific audio source or prompt. The chip automatically adapts to standard sample rates (8kHz to 96kHz).
+
+**4. SD / MODE Control (If software-controlled):**
+- If the user prompt requests software control over the amplifier's power state, configure the MCU pin connected to `SD` as a standard digital output.
+- Set the pin `LOW` (0V) to mute/shutdown the amplifier. Set it `HIGH` (3.3V/5V logic) for normal operation (default stereo mix to mono).
+
+> **🤖 SYSTEM NOTE FOR THE AI AGENT:** 
+> This document defines hardware-specific operational rules and physical constraints. When generating code, **adapt these rules to the specific programming language, framework, and environment requested by the user in the active prompt.** Always use the most idiomatic and efficient approach for the target environment while strictly respecting the hardware characteristics detailed above.
 
