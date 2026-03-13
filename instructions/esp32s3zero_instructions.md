@@ -114,7 +114,7 @@ GPIO3 | Hidden strapping pin. Also use with caution (affects boot voltage/logs)
 # Recommended peripheral layout
 Example layout that avoids internal buses.
 
-## I2C
+## I2C (Inter-Integrated Circuit)
 SDA → GPIO8  
 SCL → GPIO9
 
@@ -124,7 +124,7 @@ MISO → GPIO13
 SCLK → GPIO12  
 CS → GPI10 or GPIO4 or GPIO5
 
-## I2S
+## I2S (Inter-IC Sound)
 BCLK → GPIO4  
 LRCK → GPIO5  
 DOUT → GPIO6  

@@ -88,7 +88,7 @@ Critical Constraint: These must be connected directly to the speaker. They alter
 
 #### CODE GENERATION LOGIC & RULES
 
-**1. Hardware Interface (I2S):**
+**1. Hardware Interface - Inter-Integrated Circuit (I2S):**
 - Always use native hardware I2S peripherals and standard libraries for the target environment (e.g., `driver/i2s.h` for ESP-IDF, `I2S.h` for Arduino, `machine.I2S` for MicroPython, `audiobusio.I2SOut` for CircuitPython). 
 - Never attempt to use software bit-banging for I2S audio generation.
 
