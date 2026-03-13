@@ -100,7 +100,7 @@ def setup_controls():
     # Gomb (KEY)
     btn = digitalio.DigitalInOut(PIN_ENC_KEY)
     btn.direction = digitalio.Direction.INPUT
-    # btn.pull = digitalio.Pull.UP # Ha szükséges, de itt külső felhúzó van
+    btn.pull = digitalio.Pull.UP # bár van külső felhúzó ellenállás
     
     return enc, btn
 
