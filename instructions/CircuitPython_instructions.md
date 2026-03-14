@@ -49,5 +49,9 @@ A CircuitPython egy kifejezetten kezdőknek és oktatási célokra fejlesztett p
 **5. Structure & Execution / Felépítés és Futás:**
 - Ensure the code is structured to run directly as `code.py`. It must contain a continuous `while True:` loop (or an `asyncio.run()` equivalent) to keep the microcontroller running after initialization.
 
+**6. Displays:**
+- Always use the native displayio module for screen graphics and UI. Never try to use framebuffers or direct pixel manipulation unless strictly necessary."
+
 > **🤖 SYSTEM NOTE FOR THE AI AGENT:** 
-> When writing CircuitPython code, strictly adhere to the absence of hardware interrupts (no ISRs) and rely completely on the `board` module for pin routing. Prioritize Adafruit's standard library ecosystem over writing low-level bit-banging functions. Remember that memory management is crucial on microcontrollers; keep variable scope clean and logic efficient.
+> When writing CircuitPython code, strictly adhere to the absence of hardware interrupts (no ISRs) and rely completely on the `board` module for pin routing. Prioritize Adafruit's standard library ecosystem over writing low-level bit-banging functions. Remember that memory management is crucial on microcontrollers; keep variable scope clean and logic efficient.  
+Memory management: Avoid large memory allocations inside the while True: loop. Import the gc module and use gc.collect() periodically if handling large data buffers or strings.
