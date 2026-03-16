@@ -20,8 +20,9 @@ EC-11            USB-C           MAX98357a
             │            │     ┌─────────────────────┐
             |         IO4├─────┤SCL     SSD1306     +├─ 3V3
             │         IO5├─────┤SDA                 -├─ GND
-            └────────────┘     └─────────────────────┘
-
+            └────────────┘     └─────────────────────┘                       
+ 
+        
 *** https://github.com/veresgyuri/2nd-webradio-esp32zero-cpy """
 
 # ver 0.00 - 2026-02-19 Működő minimál kód -> archived
@@ -60,7 +61,7 @@ import wifi
 # High-level
 import audiomp3
 
-# OLED kijelző (2v00)
+# OLED kijelző - from 2v00
 import displayio
 try:
     import i2cdisplaybus
@@ -89,6 +90,10 @@ PIN_I2S_DIN = board.IO7
 PIN_ENC_S1 = board.IO11
 PIN_ENC_S2 = board.IO12
 PIN_ENC_KEY = board.IO10
+
+# OLED I2C (SSD1306)
+PIN_OLED_SCL = board.IO4
+PIN_OLED_SDA = board.IO5
 
 # --- GLOBÁLIS ÁLLAPOTVÁLTOZÓK ---
 # Ezeket a függvények módosítják, ezért a global scope-ban vannak
@@ -220,10 +225,11 @@ text_area = None
 def init_oled():
     """ OLED kijelző inicializálása (SSD1306, 128x32) """
     global display, text_area
+    displayio.release_displays()  # Minden esetre!
     
     try:
         # I2C busz (IO4=SCL, IO5=SDA)
-        i2c = busio.I2C(scl=board.IO4, sda=board.IO5)
+        i2c = busio.I2C(scl=PIN_OLED_SCL, sda=PIN_OLED_SDA)
         
         # Display bus
         displayio.release_displays()
@@ -240,7 +246,7 @@ def init_oled():
         # Szöveg címke
         text_area = label.Label(terminalio.FONT, text="", scale=3)
         text_area.x = 2
-        text_area.y = 14
+        text_area.y = 22
         display.root_group = text_area
         
         dprint("OLED init OK")
@@ -388,6 +394,7 @@ while True:
         else:
             # Ha hiba miatt állt le: Teljes újraindítás (Soft Reset)
             dprint("Hiba / Szakadás -> SOFT RESET...")
+            displayio.release_displays()  # I2C busz felszabadítása 2v00
             supervisor.reload()
             
     else:
