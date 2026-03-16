@@ -16,11 +16,12 @@ EC-11            USB-C           MAX98357a
 └ ┘         |            │     └──────────┘               
             │  ESP32-S3  │   Gain to 3V3 -> 6 dB
             │    zero    │   
-            │            │   (Gain NC -> 9 dB) 
-            │            │   (Gain to GND -> 12dB)
-            │            │
-            └────────────┘
-        
+            │            │        0.91" OLED 128x32
+            │            │     ┌─────────────────────┐
+            |         IO4├─────┤SCL     SSD1306     +├─ 3V3
+            │         IO5├─────┤SDA                 -├─ GND
+            └────────────┘     └─────────────────────┘
+
 *** https://github.com/veresgyuri/2nd-webradio-esp32zero-cpy """
 
 # ver 0.00 - 2026-02-19 Működő minimál kód -> archived
