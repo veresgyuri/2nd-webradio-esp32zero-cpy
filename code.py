@@ -32,7 +32,7 @@ EC-11            USB-C           MAX98357a
 # ver 1.21 - dprint-DEBUG bevezetés | free RAM monitorozás | PEP 8
 # ver 1.22 - Enkóder KEY => NVM - 0 és Hard RESET
 # ver 1.30 - 2026-03-03 Refaktorált vezérlés (Procedurális)
-# ver 1.31 - Fejléc átugrás javítva (Típusbiztos, stabilabb)
+# ver 2.00 - 2026-03-16 SSD1306 OLED kijelző integrálva (IO4=SCL, IO5=SDA)
 
 # --- MODULOK ---
 # Standard
@@ -44,6 +44,7 @@ import time
 # Hardware / core
 import audiobusio
 import board
+import busio
 import microcontroller  # from 1v02 | 1v20 NVM
 import rotaryio  # from 1v20
 import digitalio  # from 1v22
@@ -58,8 +59,18 @@ import wifi
 # High-level
 import audiomp3
 
+# OLED kijelző (2v00)
+import displayio
+try:
+    import i2cdisplaybus
+except ImportError:
+    pass
+import terminalio
+from adafruit_display_text import label
+import adafruit_displayio_ssd1306
+
 # --- KONFIGURÁCIÓ ÉS VERZIÓ ---
-VERSION = "1.31 - Header skipping correction"
+VERSION = "2.00 - OLED integrálva"
 DEBUG = True  # Ha False - nem ír ki semmit a dprint
 KEY_DEBOUNCE_S = 0.05  # Gomb pergésmentesítés ideje (mp)
 
@@ -201,7 +212,49 @@ def init_audio():
         dprint("I2S Init hiba:", e)
         return None
 
-# --- 3. STREAM LEJÁTSZÁS ---
+# --- 3. OLED KIJELZŐ INIT (2v00) ---
+display = None
+text_area = None
+
+def init_oled():
+    """ OLED kijelző inicializálása (SSD1306, 128x32) """
+    global display, text_area
+    
+    try:
+        # I2C busz (IO4=SCL, IO5=SDA)
+        i2c = busio.I2C(scl=board.IO4, sda=board.IO5)
+        
+        # Display bus
+        displayio.release_displays()
+        try:
+            # CircuitPython 9.x
+            display_bus = i2cdisplaybus.I2CDisplayBus(i2c, device_address=0x3C)
+        except NameError:
+            # CircuitPython 8.x
+            display_bus = displayio.I2CDisplay(i2c, device_address=0x3C)
+        
+        # SSD1306 létrehozás (128x32)
+        display = adafruit_displayio_ssd1306.SSD1306(display_bus, width=128, height=32)
+        
+        # Szöveg címke
+        text_area = label.Label(terminalio.FONT, text="", scale=3)
+        text_area.x = 2
+        text_area.y = 14
+        display.root_group = text_area
+        
+        dprint("OLED init OK")
+        return True
+    except Exception as e:
+        dprint("OLED init hiba:", e)
+        return False
+
+def update_oled(station_name):
+    """ OLED kijelző frissítése az állomás nevével (2v00) """
+    global text_area
+    if text_area:
+        text_area.text = station_name
+
+# --- 4. STREAM LEJÁTSZÁS ---
 def stream_radio(pool, station_data, enc_obj, key_obj):
     """ 
     Kapcsolódás, Pufferelés, Lejátszás.
@@ -220,6 +273,7 @@ def stream_radio(pool, station_data, enc_obj, key_obj):
     
     try:
         dprint(f"Adó: {name}")
+        update_oled(name)  # 2v00 - OLED kiírás
         
         # 3/1. Socket létrehozása és kapcsolódás
         sock = pool.socket(pool.AF_INET, pool.SOCK_STREAM)
@@ -253,7 +307,7 @@ def stream_radio(pool, station_data, enc_obj, key_obj):
             if len(prev) > 4:
                 prev = prev[-4:]
 
-        # 4. Audio hardver és dekóder indítása
+        # 5. Audio hardver és dekóder indítása
         audio = init_audio()
         if not audio: return False # Hardver hiba -> Reload
 
@@ -267,7 +321,7 @@ def stream_radio(pool, station_data, enc_obj, key_obj):
         enc_obj.position = current_index
         last_position = current_index 
 
-        # 5. LEJÁTSZÁSI CIKLUS + VEZÉRLÉS
+        # 6. LEJÁTSZÁSI CIKLUS + VEZÉRLÉS
         while audio.playing:
             # Itt hívjuk meg a kiszervezett vezérlő logikát
             # Ha True-val tér vissza, a felhasználó váltott -> Kilépünk a ciklusból
@@ -298,6 +352,7 @@ def stream_radio(pool, station_data, enc_obj, key_obj):
 # 1. Hardverek inicializálása
 dprint("\n" f"--- ESP32-S3 WebRadio {VERSION} ---")
 encoder, key = setup_controls() # Itt kapjuk meg a hardver objektumokat
+init_oled()  # 2v00 - OLED kijelző
 
 # 2. Állomások betöltése
 stations = load_stations()
