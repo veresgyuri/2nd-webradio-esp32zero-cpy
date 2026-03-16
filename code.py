@@ -35,6 +35,8 @@ EC-11            USB-C           MAX98357a
 # ver 1.22 - Enkóder KEY => NVM - 0 és Hard RESET
 # ver 1.30 - 2026-03-03 Refaktorált vezérlés (Procedurális)
 # ver 2.00 - 2026-03-16 SSD1306 OLED kijelző integrálva (IO4=SCL, IO5=SDA)
+# ver 2.10 - cPy ver. 10.x.x import and init format
+# ver 2.11 - Add a boot display | Hello! version - készül....
 
 # --- MODULOK ---
 # Standard
@@ -63,16 +65,13 @@ import audiomp3
 
 # OLED kijelző - from 2v00
 import displayio
-try:
-    import i2cdisplaybus
-except ImportError:
-    pass
+import i2cdisplaybus
 import terminalio
 from adafruit_display_text import label
 import adafruit_displayio_ssd1306
 
 # --- KONFIGURÁCIÓ ÉS VERZIÓ ---
-VERSION = "2.00 - OLED integrálva"
+VERSION = "2.10 - OLED cPy 10.x.x"
 DEBUG = True  # Ha False - nem ír ki semmit a dprint
 KEY_DEBOUNCE_S = 0.05  # Gomb pergésmentesítés ideje (mp)
 
@@ -225,20 +224,14 @@ text_area = None
 def init_oled():
     """ OLED kijelző inicializálása (SSD1306, 128x32) """
     global display, text_area
-    displayio.release_displays()  # Minden esetre!
+    displayio.release_displays()  # Felszabadítás - minden esetre!
     
     try:
         # I2C busz (IO4=SCL, IO5=SDA)
         i2c = busio.I2C(scl=PIN_OLED_SCL, sda=PIN_OLED_SDA)
-        
-        # Display bus
-        displayio.release_displays()
-        try:
-            # CircuitPython 9.x
-            display_bus = i2cdisplaybus.I2CDisplayBus(i2c, device_address=0x3C)
-        except NameError:
-            # CircuitPython 8.x
-            display_bus = displayio.I2CDisplay(i2c, device_address=0x3C)
+   
+        # CircuitPython 10.x - közvetlen hívás, nincs try-except
+        display_bus = i2cdisplaybus.I2CDisplayBus(i2c, device_address=0x3C)
         
         # SSD1306 létrehozás (128x32)
         display = adafruit_displayio_ssd1306.SSD1306(display_bus, width=128, height=32)
@@ -246,7 +239,7 @@ def init_oled():
         # Szöveg címke
         text_area = label.Label(terminalio.FONT, text="", scale=3)
         text_area.x = 2
-        text_area.y = 22
+        text_area.y = 20
         display.root_group = text_area
         
         dprint("OLED init OK")
