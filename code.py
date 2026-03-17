@@ -36,7 +36,7 @@ EC-11            USB-C           MAX98357a
 # ver 1.30 - 2026-03-03 Refaktorált vezérlés (Procedurális)
 # ver 2.00 - 2026-03-16 SSD1306 OLED kijelző integrálva (IO4=SCL, IO5=SDA)
 # ver 2.10 - cPy ver. 10.x.x import and init format
-# ver 2.11 - Add boot screen | Szia! version
+# ver 2.11 - Add boot screen | Szia! NET... / version
 
 # --- MODULOK ---
 # Standard
