@@ -36,7 +36,7 @@ EC-11            USB-C           MAX98357a
 # ver 1.30 - 2026-03-03 Refaktorált vezérlés (Procedurális)
 # ver 2.00 - 2026-03-16 SSD1306 OLED kijelző integrálva (IO4=SCL, IO5=SDA)
 # ver 2.10 - cPy ver. 10.x.x import and init format
-# ver 2.11 - Add a boot display | Hello! version - készül....
+# ver 2.11 - Add boot screen | Szia! version
 
 # --- MODULOK ---
 # Standard
@@ -71,7 +71,7 @@ from adafruit_display_text import label
 import adafruit_displayio_ssd1306
 
 # --- KONFIGURÁCIÓ ÉS VERZIÓ ---
-VERSION = "2.10 - OLED cPy 10.x.x"
+VERSION = "2.11 - add BOOT screen"
 DEBUG = True  # Ha False - nem ír ki semmit a dprint
 KEY_DEBOUNCE_S = 0.05  # Gomb pergésmentesítés ideje (mp)
 
@@ -236,10 +236,14 @@ def init_oled():
         # SSD1306 létrehozás (128x32)
         display = adafruit_displayio_ssd1306.SSD1306(display_bus, width=128, height=32)
         
-        # Szöveg címke
-        text_area = label.Label(terminalio.FONT, text="", scale=3)
+        # Szöveg címke - INDULÁSI KÉPERNYŐ (Boot screen) from 2v11
+        # A VERSION stringből levágjuk az első 4 karaktert (pl. "2.10")
+        boot_text = f"Szia!  NET kereses...\nversion: {VERSION[:4]}" 
+        
+        # scale=2 és line_spacing=1.0 kell ahhoz, hogy 2 sor kiférjen a 32 px magas kijelzőn
+        text_area = label.Label(terminalio.FONT, text=boot_text, scale=1, line_spacing=1.7)
         text_area.x = 2
-        text_area.y = 20
+        text_area.y = 8
         display.root_group = text_area
         
         dprint("OLED init OK")
@@ -252,6 +256,12 @@ def update_oled(station_name):
     """ OLED kijelző frissítése az állomás nevével (2v00) """
     global text_area
     if text_area:
+        # Ha még a boot képernyő kisebb betűméretén (2) vagyunk, 
+        # visszaállítjuk nagyra (3) az adó nevéhez!
+        if text_area.scale == 1:
+            text_area.scale = 3
+            text_area.y = 20  # 1 soros nagybetűhöz középre igazítva
+            
         text_area.text = station_name
 
 # --- 4. STREAM LEJÁTSZÁS ---
