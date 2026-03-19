@@ -87,7 +87,7 @@ EC-11            USB-C           MAX98357a
 # ver 1.01 - NET szakadás kezelése - Soft Reset
 # ver 1.02 - WiFi TX PWR korlát | 0,2 sec sleep - proci kimélés
 # ver 1.10 - 2026-02-26 stations.json - Szeparált állomáslista
-# ver 1.20 - 2026-02-26 Enkóderes csatornaváltás | CH nr. to NVM
+# ver 1.20 - Enkóderes csatornaváltás | CH nr. to NVM (max. 255 chanels)
 # ver 1.21 - dprint-DEBUG bevezetés | free RAM monitorozás | PEP 8
 # ver 1.22 - Enkóder KEY => NVM - 0 és Hard RESET
 # ver 1.30 - 2026-03-03 Refaktorált vezérlés (Procedurális)
@@ -112,7 +112,7 @@ import rotaryio  # from 1v20
 import digitalio  # from 1v22
 
 # System
-import supervisor  # from 1v01  
+import supervisor  # from 1v01
 
 # Network
 import socketpool
@@ -172,12 +172,12 @@ def setup_controls():
     """ Létrehozza és visszaadja a vezérlő objektumokat (Encoder, Key) """
     # Enkóder
     enc = rotaryio.IncrementalEncoder(PIN_ENC_S1, PIN_ENC_S2)
-    
+
     # Gomb (KEY)
     btn = digitalio.DigitalInOut(PIN_ENC_KEY)
     btn.direction = digitalio.Direction.INPUT
-    btn.pull = digitalio.Pull.UP # bár van külső felhúzó ellenállás
-    
+    btn.pull = digitalio.Pull.UP  # bár van külső felhúzó ellenállás
+
     return enc, btn
 
 def handle_user_input(encoder_obj, key_obj, stations_len):
@@ -187,25 +187,25 @@ def handle_user_input(encoder_obj, key_obj, stations_len):
     Ha True, akkor csatornaváltás történt.
     """
     global last_position, last_key_state, current_index
-    
+
     # 1. ENKÓDER FIGYELÉSE
     position = encoder_obj.position
     if position != last_position:
         # Váltás történt
         current_index = position % stations_len
-        
+
         # NVM Mentés azonnal
         microcontroller.nvm[0] = current_index
         dprint(f"Váltás -> Mentve NVM-be: {current_index}")
-        
-        last_position = position # Pozíció frissítése
-        return True # Jelezzük, hogy váltani kell
+
+        last_position = position  # Pozíció frissítése
+        return True  # Jelezzük, hogy váltani kell
 
     # 2. GOMB (KEY) FIGYELÉSE (Hard Reset funkció)
     try:
         current_key_state = key_obj.value
     except Exception:
-        current_key_state = True # Hiba esetén "nem nyomott"-nak vesszük
+        current_key_state = True  # Hiba esetén "nem nyomott"-nak vesszük
 
     # Észlelés: True -> False átmenet (Lefutó él = Nyomás)
     if (not current_key_state) and last_key_state:
@@ -213,24 +213,24 @@ def handle_user_input(encoder_obj, key_obj, stations_len):
         t0 = time.monotonic()
         stable = False
         while (time.monotonic() - t0) < KEY_DEBOUNCE_S:
-            if key_obj.value: # Ha felengedik menet közben
+            if key_obj.value:  # Ha felengedik menet közben
                 stable = False
                 break
             stable = True
-        
+
         if stable and (not key_obj.value):
             dprint("KEY lenyomva: NVM törlés és HARD RESET...")
             try:
                 microcontroller.nvm[0] = 0
             except Exception as e:
                 dprint("NVM hiba:", e)
-            
-            time.sleep(0.1) # Biztonsági szünet
-            microcontroller.reset() # HARD RESET - Innen nincs visszatérés
-            
+
+            time.sleep(0.1)  # Biztonsági szünet
+            microcontroller.reset()  # HARD RESET - Innen nincs visszatérés
+
     last_key_state = current_key_state
-    
-    return False # Nem történt csatornaváltás
+
+    return False  # Nem történt csatornaváltás
 
 # --- 0. ADATOK BETÖLTÉSE ---
 def load_stations():
@@ -245,20 +245,18 @@ def load_stations():
 # --- 1. WiFi KEZELÉS ---
 def ensure_wifi():
     """ WiFi kapcsolat ellenőrzése és felépítése """
-    gc.collect() # 1v21 - Memória karbantartás csatlakozás előtt
+    gc.collect()  # 1v21 - Memória karbantartás csatlakozás előtt
     # 1v02 - WiFi adóteljesítmény korlát 8,5 dBm-re (7mW vs. 100mW)
     wifi.radio.tx_power = 8.5
-    
+
     if wifi.radio.connected:
         # 1v02
         dprint(f"Beállított WiFi teljesítmény: {wifi.radio.tx_power} dBm")
         dprint(f"Szabad memória: {gc.mem_free()} byte")
         dprint(f"CPU hőmérséklet: {microcontroller.cpu.temperature:.1f} °C")
         dprint(f"WiFi kapcsolódva: {SSID}...")  # 1v02
-        # dprint(f"WiFi OK. Pwr: {wifi.radio.tx_power} dBm, RAM: {gc.mem_free()}, CPU: {microcontroller.cpu.temperature:.1f}C")
-        # dprint(f"SSID: {SSID}")
         return True
-        
+
     dprint(f"Csatlakozás: {SSID}...")
     try:
         wifi.radio.connect(SSID, PASSWORD)
@@ -282,27 +280,29 @@ def init_oled():
     """ OLED kijelző inicializálása (SSD1306, 128x32) """
     global display, text_area
     displayio.release_displays()  # Felszabadítás - minden esetre!
-    
+
     try:
         # I2C busz (IO4=SCL, IO5=SDA)
         i2c = busio.I2C(scl=PIN_OLED_SCL, sda=PIN_OLED_SDA)
-   
+
         # CircuitPython 10.x - közvetlen hívás, nincs try-except
         display_bus = i2cdisplaybus.I2CDisplayBus(i2c, device_address=0x3C)
-        
+
         # SSD1306 létrehozás (128x32)
-        display = adafruit_displayio_ssd1306.SSD1306(display_bus, width=128, height=32)
-        
+        display = adafruit_displayio_ssd1306.SSD1306(
+            display_bus, width=128, height=32)
+
         # Szöveg címke - INDULÁSI KÉPERNYŐ (Boot screen) from 2v11
         # A VERSION stringből levágjuk az első 4 karaktert (pl. "2.10")
-        boot_text = f"Szia!  NET kereses...\nversion: {VERSION[:4]}" 
-        
+        boot_text = f"Szia!  NET kereses...\nversion: {VERSION[:4]}"
+
         # scale=2 és line_spacing=1.0 kell ahhoz, hogy 2 sor kiférjen a 32 px magas kijelzőn
-        text_area = label.Label(terminalio.FONT, text=boot_text, scale=1, line_spacing=1.7)
+        text_area = label.Label(
+            terminalio.FONT, text=boot_text, scale=1, line_spacing=1.7)
         text_area.x = 2
         text_area.y = 8
         display.root_group = text_area
-        
+
         dprint("OLED init OK")
         return True
     except Exception as e:
@@ -313,44 +313,44 @@ def update_oled(station_name):
     """ OLED kijelző frissítése az állomás nevével (2v00) """
     global text_area
     if text_area:
-        # Ha még a boot képernyő kisebb betűméretén (2) vagyunk, 
+        # Ha még a boot képernyő kisebb betűméretén (2) vagyunk,
         # visszaállítjuk nagyra (3) az adó nevéhez!
         if text_area.scale == 1:
             text_area.scale = 3
             text_area.y = 20  # 1 soros nagybetűhöz középre igazítva
-            
+
         text_area.text = station_name
 
-# --- 4. STREAM LEJÁTSZÁS ---
+# --- 4. STREAM LEJÁTSZÁS --
 def stream_radio(pool, station_data, enc_obj, key_obj):
     """ 
     Kapcsolódás, Pufferelés, Lejátszás.
     A vezérlést átadja a handle_user_input függvénynek.
     """
-    global last_position, current_index # Csak olvasáshoz/szinkronhoz kell itt
-    
+    global last_position, current_index  # Csak olvasáshoz/szinkronhoz kell itt
+
     sock = None
     audio = None
     manual_switch = False
-    
+
     host = station_data['host']
     port = station_data['port']
     path = station_data['path']
     name = station_data['name']
-    
+
     try:
         dprint(f"Adó: {name}")
         update_oled(name)  # 2v00 - OLED kiírás
-        
+
         # 3/1. Socket létrehozása és kapcsolódás
         sock = pool.socket(pool.AF_INET, pool.SOCK_STREAM)
         sock.settimeout(10)
         sock.connect((host, port))
-        
+
         # 3/2. HTTP Kérés
         request = f"GET {path} HTTP/1.0\r\nHost: {host}\r\n\r\n"
         sock.send(bytes(request, "utf-8"))
-        
+
         # 3/3. Fejléc átugrása (Javított, típusbiztos 1v31)
         buffer = bytearray(1)
         prev = bytearray()
@@ -358,14 +358,14 @@ def stream_radio(pool, station_data, enc_obj, key_obj):
         while True:
             # 1 bájtot olvasunk a bufferbe
             n = sock.recv_into(buffer, 1)
-            
+
             # Ha a szerver lezárta a kapcsolatot
             if n == 0:
                 raise Exception("Socket lezárt (Remote end closed)")
 
             # Hozzáfűzzük az előzményekhez
             prev += buffer
-            
+
             # Keressük a dupla sortörést (\r\n\r\n)
             if b"\r\n\r\n" in prev:
                 break
@@ -376,17 +376,18 @@ def stream_radio(pool, station_data, enc_obj, key_obj):
 
         # 5. Audio hardver és dekóder indítása
         audio = init_audio()
-        if not audio: return False # Hardver hiba -> Reload
+        if not audio:
+            return False  # Hardver hiba -> Reload
 
         mp3_stream = audiomp3.MP3Decoder(sock)
         audio.play(mp3_stream)
-        
+
         dprint(">>> LEJÁTSZÁS INDULT <<<")
         dprint(f"Szabad RAM: {gc.mem_free()} byte")
-        
+
         # Enkóder szinkronizálása az aktuális állomáshoz (hogy ne ugorjon egyet induláskor)
         enc_obj.position = current_index
-        last_position = current_index 
+        last_position = current_index
 
         # 6. LEJÁTSZÁSI CIKLUS + VEZÉRLÉS
         while audio.playing:
@@ -396,14 +397,14 @@ def stream_radio(pool, station_data, enc_obj, key_obj):
                 manual_switch = True
                 audio.stop()
                 break
-            
+
             # CPU pihentetése a hurokban
             time.sleep(0.05)
-            
+
     except Exception as e:
         dprint("Stream hiba / Szakadás:", e)
-        manual_switch = False # Ez hiba volt, nem kézi váltás
-    
+        manual_switch = False  # Ez hiba volt, nem kézi váltás
+
     finally:
         # Takarítás
         if audio:
@@ -411,21 +412,22 @@ def stream_radio(pool, station_data, enc_obj, key_obj):
             audio.deinit()
         if sock:
             sock.close()
-            
+
     return manual_switch
 
 # --- FŐ PROGRAM (MAIN LOOP) ---
 
 # 1. Hardverek inicializálása
 dprint("\n" f"--- ESP32-S3 WebRadio {VERSION} ---")
-encoder, key = setup_controls() # Itt kapjuk meg a hardver objektumokat
+encoder, key = setup_controls()  # Itt kapjuk meg a hardver objektumokat
 init_oled()  # 2v00 - OLED kijelző
 
 # 2. Állomások betöltése
 stations = load_stations()
 if not stations:
     dprint("KRITIKUS HIBA: Nincs állomáslista!")
-    while True: time.sleep(1)
+    while True:
+        time.sleep(1)
 
 # 3. NVM (Memória) visszaállítása
 saved_index = microcontroller.nvm[0]
@@ -443,10 +445,10 @@ while True:
     if ensure_wifi():
         # Kiválasztjuk az aktuális állomást
         station = stations[current_index]
-        
+
         # Indítjuk a streamet, átadva a hardver vezérlőket is
         user_switched = stream_radio(pool, station, encoder, key)
-        
+
         if user_switched:
             # Ha kézzel váltottunk: Gyors újracsatlakozás (Soft Reset nélkül)
             dprint("Kézi váltás -> Következő adó...")
@@ -456,7 +458,7 @@ while True:
             dprint("Hiba / Szakadás -> SOFT RESET...")
             displayio.release_displays()  # I2C busz felszabadítása 2v00
             supervisor.reload()
-            
+
     else:
         dprint("Nincs WiFi... Újrapróbálás 3mp múlva.")
         time.sleep(3)
