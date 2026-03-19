@@ -21,8 +21,65 @@ EC-11            USB-C           MAX98357a
             |         IO4├─────┤SCL     SSD1306     +├─ 3V3
             │         IO5├─────┤SDA                 -├─ GND
             └────────────┘     └─────────────────────┘                       
- 
-        
+
+    ************ MAIN PROGRAM FLOW ******************
+
+┌─────────────────────────────────────────────────────────────┐
+│                      POWER ON (BOOT)                        │
+│  1. OLED init -> "Welcome! NET kereses..." (Boot screen)    │
+│  2. Load stations from stations.json                        │
+│  3. Restore station index from NVM                          │
+│  4. Create SocketPool                                       │
+└───────────────────────────────┬─────────────────────────────┘
+                                │
+                                ▼
+                    ┌───────────────────────┐
+                    │  ensure_wifi()        │
+                    │  - Connect WiFi       │
+                    │  - Check connection   │◀────────┐
+                    └───────────┬───────────┘         | 
+                                │                     |
+                  ┌─────────────┴───────┐             |   
+                  │                     │             |
+             [WiFi OK]              [No WiFi]         |
+                  |                     |             |
+                  │                     └----> retry -┘
+                  ▼                               
+┌───────────────────────────────────────────────────────────┐
+│ stream_radio()                                            │
+│  1. Socket connect (host:port)                            │
+│  2. Send HTTP GET request                                 │
+│  3. Skip headers (\r\n\r\n)                               │
+│  4. I2S audio init                                        │
+│  5. Create MP3 decoder + play                             │
+│  6. Update OLED (station name)                            │
+└───────────────────────────────┬───────────────────────────┘
+                                │
+                                ▼
+┌───────────────────────────────────────────────────────────┐
+│   PLAYBACK LOOP (while audio.playing)                     │
+│                                                           │
+│  handle_user_input()                                      │
+│  ├── ENCODER turn -> switch station                       │
+│  │   └── Save to NVM                                      │
+│  │   └── audio.stop() -> break                            │
+│  │                                                        │
+│  └── KEY button -> NVM=0, HARD RESET                      │
+│      └── microcontroller.reset()                          │
+│                                                           │
+│  time.sleep(0.05) - CPU idle                              │
+└───────────────────────────────┬───────────────────────────┘
+                                │
+            ┌───────────────────┴───────────────┐
+            │                                   │
+       [User switched]                   [Error / Stream break]
+            │                                   │
+            ▼                                   ▼
+┌────────────────────────┐   ┌─────────────────────────────┐
+│ Next station -> loop   │   │ supervisor.reload() -> BOOT │
+│ (back to ensure_wifi)  │   │ (Soft Reset)                │
+└────────────────────────┘   └─────────────────────────────┘
+      
 *** https://github.com/veresgyuri/2nd-webradio-esp32zero-cpy """
 
 # ver 0.00 - 2026-02-19 Működő minimál kód -> archived
@@ -37,6 +94,7 @@ EC-11            USB-C           MAX98357a
 # ver 2.00 - 2026-03-16 SSD1306 OLED kijelző integrálva (IO4=SCL, IO5=SDA)
 # ver 2.10 - cPy ver. 10.x.x import and init format
 # ver 2.11 - Add boot screen | Szia! NET... / version
+# ver 2.12 - Add a visual program flow
 
 # --- MODULOK ---
 # Standard
@@ -71,7 +129,7 @@ from adafruit_display_text import label
 import adafruit_displayio_ssd1306
 
 # --- KONFIGURÁCIÓ ÉS VERZIÓ ---
-VERSION = "2.11 - add BOOT screen"
+VERSION = "2.12 - add visual program flow"
 DEBUG = True  # Ha False - nem ír ki semmit a dprint
 KEY_DEBOUNCE_S = 0.05  # Gomb pergésmentesítés ideje (mp)
 
@@ -99,6 +157,8 @@ PIN_OLED_SDA = board.IO5
 last_position = 0
 last_key_state = True
 current_index = 0
+display = None
+text_area = None
 
 # --- SEGÉDFÜGGVÉNYEK ---
 # pylint: disable=invalid-name, global-statement
@@ -218,9 +278,6 @@ def init_audio():
         return None
 
 # --- 3. OLED KIJELZŐ INIT (2v00) ---
-display = None
-text_area = None
-
 def init_oled():
     """ OLED kijelző inicializálása (SSD1306, 128x32) """
     global display, text_area
