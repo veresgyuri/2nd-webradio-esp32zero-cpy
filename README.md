@@ -26,9 +26,9 @@ A rendszer szíve egy ESP32 kártya, amely az internetről letölti a zenei adat
 
 ![Működési infografika 0v0](images/0v0_infografika.jpg)
 
-1v22 - Állomáslista külön fájlban + egy 'tekerős nyomógomb' ami az váltást és az első állomásra ugrást kezeli  
+1v22 - Állomáslista külön fájlban + egy 'tekerős nyomógomb' ami a váltást és az első állomásra ugrást kezeli  
 
-![Működési infografika 1v22](images/1v22_infografika.png)
+![Működési infografika 1v22](images/1v22_infografika.jpg)
 
 2v.. - OLED kijelző implementálása és a kód véglegesítése  
 
@@ -43,8 +43,11 @@ A rendszer szíve egy ESP32 kártya, amely az internetről letölti a zenei adat
 
 3.  **Fájlok másolása:**
     Ha akarod, töltsd le ezt a repót (vagy a ZIP-et), és másold át a `CIRCUITPY` meghajtó gyökerébe.
-    De a működéshez csak erre a három fájlra lesz szükséged<br>
+    De a működéshez csak erre a három fájlra lesz szükséged - a gyökérbe<br>
     ![Szükséges filék](images/need_this_3_files.png)  
+
+    Valamint ezeket kell felmásolnod a /lib mappába<br>
+    ![Szükséges modulok](images/need_to_lib_folder.png)   
 
 5.  **Beállítás (Wi-Fi & Állomáslista):**
     A kedvenc rádióállomásaid adatait írd be a `stations.json` fájlba.
