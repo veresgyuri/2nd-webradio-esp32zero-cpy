@@ -63,3 +63,7 @@ A kijelzőn kicsi betükkel látod, ha még nincs Wifi kapcsolat.
 Sikeres lejátszáskor a kijelző nagy karaterre vált - kiírva a streamelt állomás nevét.  
 Az állomásokat az enkóder tekerésével tudod váltani.  
 A tekerőgombot megnyomva újraindul az eszkőz és a lista első állomására ugrik.
+
+## 🖼️ Fotók
+
+Javaslom, hogy nézz be az 📁/images mappába is.
