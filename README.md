@@ -2,7 +2,7 @@
 
 Sorry folks, this repo comes with Hungarian comments only 🙂<br><br>
 Ez a projekt egy egyszerű, otthon is könnyen megépíthető internetes rádiót valósít meg.  
-A célja, hogy kevés és olcsó (~4eFt) alkatrészek segítségével online rádióadókat hallgathassunk.
+A célja, hogy kevés és olcsó (~5eFt) alkatrészek segítségével online rádióadókat hallgathassunk.
 
 A kód **CircuitPython** nyelven íródott, így a módosítása és használata kezdők számára is egyszerű.
 
@@ -18,15 +18,22 @@ A kód **CircuitPython** nyelven íródott, így a módosítása és használata
 
 ## ⚙️ Működés
 
-A rendszer szíve egy ESP32 kártya, amely az internetről letölti a zenei adatfolyamot, és egy digitális-analóg átalakítón keresztül hanggá alakítja.
+A rendszer szíve egy ESP32 kártya, amely az internetről letölti a zenei adatfolyamot, és egy digitális-analóg átalakítót vezérelve hanggá alakítja.  
+  
+**Fejlesztési életciklus**
 
-1v02 - Állomás váltás csak a szoftverből  
+0v0 - Csak egy állomást játszik --> állomás váltás a code.py kódban - a link átírásával  
 
-![Működési infografika](images/1v02_infografika.png)
+![Működési infografika 0v0](images/0v0_infografika.jpg)
 
-1v22 - Beépítésre került egy 'tekerős nyomógomb' ami az állomásváltást és az első állomásra ugrást kezeli  
+1v22 - Állomáslista külön fájlban + egy 'tekerős nyomógomb' ami az váltást és az első állomásra ugrást kezeli  
 
-![Működési infografika](images/1v22_infografika.png)  
+![Működési infografika 1v22](images/1v22_infografika.png)
+
+2v.. - OLED kijelző implementálása és a kód véglegesítése  
+
+![Működési infografika 2v..](images/2v12_infografika.jpg)  
+
 
 ## 🚀 Telepítés 3 lépésben
 
@@ -41,12 +48,15 @@ A rendszer szíve egy ESP32 kártya, amely az internetről letölti a zenei adat
 
 5.  **Beállítás (Wi-Fi & Állomáslista):**
     A kedvenc rádióállomásaid adatait írd be a `stations.json` fájlba.
-    A `settings.toml` fájlban add meg a saját Wi-Fi adataidat.<br>
+    A `settings.toml` fájlban add meg a Wi-Fi elérés adataidat.<br>
     Ez legyen a formátum:  
     CIRCUITPY_WIFI_SSID = "your ssid name"  
     CIRCUITPY_WIFI_PASSWORD = "your pwd"
 
 ## ⚙️ Használat
 
-A bekapcsolás után az eszköz automatikusan csatlakozik a megadott Wi-Fi hálózatra és elindítja a lejátszást.
-Az állomásokat az enkóder tekerésével tudod váltani. A tekerőgombot megnyomva újraindul az eszkőz és a lista első állomására ugrik.
+A bekapcsolás után az eszköz automatikusan csatlakozik a megadott Wi-Fi hálózatra és elindítja a lejátszást.  
+A kijelzőn kicsi betükkel látod, ha még nincs Wifi kapcsolat.  
+Sikeres lejátszáskor a kijelző nagy karaterre vált - kiírva a streamelt állomás nevét.  
+Az állomásokat az enkóder tekerésével tudod váltani.  
+A tekerőgombot megnyomva újraindul az eszkőz és a lista első állomására ugrik.
