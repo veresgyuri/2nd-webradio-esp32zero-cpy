@@ -1,6 +1,6 @@
 ---
 description: '0.91" 128x32 OLED display - SSD1306 hardware and usage rules for code generation'
-applyTo: '**/*oled*'
+applyTo: '**/*128x32oled*'
 ---
 
 # 0.91" OLED Display - SSD1306
