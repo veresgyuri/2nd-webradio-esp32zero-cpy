@@ -1,6 +1,6 @@
 ## Project Overview
 CircuitPython based internet radio running on the ESP32 microcontroller.  
-The objective is to implement a low-cost, hobby, DIY web radio.
+The objective is to implement a low-cost, hobby and DIY web radio.
 
 ## Target Environment & Hardware
 - Runtime: [CircuitPython 10.1.4.](./instructions/CircuitPython_instructions.md)
@@ -10,33 +10,31 @@ The objective is to implement a low-cost, hobby, DIY web radio.
 - Control: [EC11](./instructions/ec11_instructions.md) rotary encoder with push button
 
 ## Project Structure
-    code.py: The main entry point for the application.
-    stations.json: Configuration file for the radio station list.
-    settings.toml: Secure storage for WiFi credentials (SSID and Password).
-    /lib: Directory for required CircuitPython library modules.
-    /instructions: Project-specific rules and hardware interaction logic.  
-    ├── CircuitPython_instructions.md
-    ├── esp32s3zero_instructions.md
-    ├── max98357a_instructions.md
-    ├── ec11_instructions.md
-    └── 128x32_ssd1306_oled_instructions.md
-    AGENTS.md: Dedicated context and instructions for AI coding agents  
-    .copilot-instructions.md: Specific coding rules, formatting, and AI behavior guidelines
+`code.py` The main entry point for the application.  
+`stations.json` Configuration file for the radio station list.  
+`settings.toml` Secure storage for WiFi credentials (SSID and Password).  
+`/lib:` Directory for required CircuitPython library modules.  
+`/instructions:` Project-specific rules and hardware interaction logic.  
+├── `CircuitPython_instructions.md`  
+├── `esp32s3zero_instructions.md`  
+├── `max98357a_instructions.md`  
+├── `ec11_instructions.md`  
+└── `128x32_ssd1306_oled_instructions.md`  
+`AGENTS.md` Dedicated context and instructions for AI coding agents.  
+`.copilot-instructions.md` Coding rules.  
 
 **Other resources**:  
-`README.md`: Human-oriented documentation.  
-`/images`: Project photos and diagrams (non-code).  
-`/archive`: Deprecated or older code versions (ignore for development).
+`README.md` Human-oriented documentation.  
+`/images:` Project photos and diagrams (non-code).  
+`/archive:` Deprecated or older code versions (ignore for development).
     
 
 ## Implementation Logic & Instructions
 AI agents must adhere to the following hierarchical instruction set to ensure compatibility:
 
-    Primary Rules: Follow the instructions defined in .copilot-instructions.md.
-    Modular Instructions: Refer to specific hardware guidance in the /instructions/ folder (e.g., max98357a_instructions.md, ec11_instructions.md).
+    Primary Rules: After understanding this AGENTS.md file, follow the instructions specified in the .copilot-instructions.md file.
+    Modular Instructions: Refer to specific hardware guidance in the /instructions/ folder.
     Strict Compliance: Always prioritize the CODE GENERATION LOGIC sections found within these instruction files to prevent hardware-specific errors.
-
-
 
 ## Coding Guidelines
 Specific AI coding rules, formatting preferences, and behavioral instructions are defined in [.copilot-instructions.md](.copilot-instructions.md).
