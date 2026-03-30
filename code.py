@@ -323,7 +323,7 @@ def update_oled(station_name):
         text_area.text = station_name
 
 # --- 4. STREAM LEJÁTSZÁS --
-def stream_radio(pool, station_data, enc_obj, key_obj):
+def stream_radio(pool, station_data, enc_obj, key_obj, stations_len):
     """ 
     Kapcsolódás, Pufferelés, Lejátszás.
     A vezérlést átadja a handle_user_input függvénynek.
@@ -395,7 +395,7 @@ def stream_radio(pool, station_data, enc_obj, key_obj):
         while audio.playing:
             # Itt hívjuk meg a kiszervezett vezérlő logikát
             # Ha True-val tér vissza, a felhasználó váltott -> Kilépünk a ciklusból
-            if handle_user_input(enc_obj, key_obj, len(stations)):
+            if handle_user_input(enc_obj, key_obj, stations_len):
                 manual_switch = True
                 audio.stop()
                 break
@@ -454,7 +454,7 @@ while True:
         station = stations[current_index]
 
         # Indítjuk a streamet, átadva a hardver vezérlőket is
-        user_switched = stream_radio(pool, station, encoder, key)
+        user_switched = stream_radio(pool, station, encoder, key, len(stations))
 
         if user_switched:
             # Ha kézzel váltottunk: Gyors újracsatlakozás (Soft Reset nélkül)
