@@ -95,6 +95,7 @@ EC-11            USB-C           MAX98357a
 # ver 2.10 - cPy ver. 10.x.x import and init format
 # ver 2.11 - Add boot screen | Szia! NET... / version
 # ver 2.12 - Add a visual program flow
+# ver 2.13 - 2026-03-30 Reducing memory leak when channel change
 
 # --- MODULOK ---
 # Standard
@@ -129,7 +130,7 @@ from adafruit_display_text import label
 import adafruit_displayio_ssd1306
 
 # --- KONFIGURÁCIÓ ÉS VERZIÓ ---
-VERSION = "2.12 - add visual program flow"
+VERSION = "2.13 - Memória szivárgás csökkentése váltáskor"
 DEBUG = True  # Ha False - nem ír ki semmit a dprint
 KEY_DEBOUNCE_S = 0.05  # Gomb pergésmentesítés ideje (mp)
 
@@ -331,6 +332,7 @@ def stream_radio(pool, station_data, enc_obj, key_obj):
 
     sock = None
     audio = None
+    mp3_stream = None # from 2v13
     manual_switch = False
 
     host = station_data['host']
@@ -412,6 +414,11 @@ def stream_radio(pool, station_data, enc_obj, key_obj):
             audio.deinit()
         if sock:
             sock.close()
+        if mp3_stream:  # from 2v13 - MP3Decoder deinitálása    
+            try:
+                mp3_stream.deinit() # from 2v13
+            except:
+                pass
 
     return manual_switch
 
