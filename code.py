@@ -158,7 +158,6 @@ PIN_OLED_SDA = board.IO5
 last_position = 0
 last_key_state = True
 current_index = 0
-display = None
 text_area = None
 
 # --- SEGÉDFÜGGVÉNYEK ---
@@ -279,7 +278,7 @@ def init_audio():
 # --- 3. OLED KIJELZŐ INIT (2v00) ---
 def init_oled():
     """ OLED kijelző inicializálása (SSD1306, 128x32) """
-    global display, text_area
+    global text_area
     displayio.release_displays()  # Felszabadítás - minden esetre!
 
     try:
@@ -290,8 +289,7 @@ def init_oled():
         display_bus = i2cdisplaybus.I2CDisplayBus(i2c, device_address=0x3C)
 
         # SSD1306 létrehozás (128x32)
-        display = adafruit_displayio_ssd1306.SSD1306(
-            display_bus, width=128, height=32)
+        display = adafruit_displayio_ssd1306.SSD1306(display_bus, width=128, height=32)
 
         # Szöveg címke - INDULÁSI KÉPERNYŐ (Boot screen) from 2v11
         # A VERSION stringből levágjuk az első 4 karaktert (pl. "2.10")
@@ -312,7 +310,6 @@ def init_oled():
 
 def update_oled(station_name):
     """ OLED kijelző frissítése az állomás nevével (2v00) """
-    global text_area
     if text_area:
         # Ha még a boot képernyő kisebb betűméretén (2) vagyunk,
         # visszaállítjuk nagyra (3) az adó nevéhez!
