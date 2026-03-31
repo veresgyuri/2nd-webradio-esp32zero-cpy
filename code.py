@@ -341,16 +341,16 @@ def stream_radio(pool, station_data, enc_obj, key_obj, stations_len):
         dprint(f"Adó: {name}")
         update_oled(name)  # 2v00 - OLED kiírás
 
-        # 3/1. Socket létrehozása és kapcsolódás
+        # 4/1. Socket létrrehozása és kapcsolódás
         sock = pool.socket(pool.AF_INET, pool.SOCK_STREAM)
         sock.settimeout(10)
         sock.connect((host, port))
 
-        # 3/2. HTTP Kérés
+        # 4/2. HTTP Kérés
         request = f"GET {path} HTTP/1.0\r\nHost: {host}\r\n\r\n"
         sock.send(bytes(request, "utf-8"))
 
-        # 3/3. Fejléc átugrása (Javított, típusbiztos 1v31)
+        # 4/3. Fejléc átugrása (Javított, típusbiztos 1v31)
         buffer = bytearray(1)
         prev = bytearray()
 
