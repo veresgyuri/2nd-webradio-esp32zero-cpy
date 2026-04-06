@@ -219,6 +219,7 @@ EC-11            USB-C           MAX98357a
 # ver 3.10 - 2026-04-03 Menü funkció: rövid nyomásra állomáslista böngészés
 # ver 3.11 - játszott/össz db into to display
 # ver 3.20 - 2026-04-03 Vizuális visszajelzés gomb lenyomásra -> LISTA
+# ver 3.21 - add SSID info to boot display
 
 # --- MODULOK ---
 # Standard
@@ -253,7 +254,7 @@ from adafruit_display_text import label
 import adafruit_displayio_ssd1306
 
 # --- KONFIGURÁCIÓ ÉS VERZIÓ ---
-VERSION = "3.20 - Menü + vizuális visszajelzés"
+VERSION = "3.21 - SSID info on boot"
 DEBUG = True
 KEY_DEBOUNCE_S = 0.05
 LONG_PRESS_MS = 1000  # Hosszú nyomás küszöb (ms)
@@ -419,11 +420,11 @@ class Display:
             display_bus = i2cdisplaybus.I2CDisplayBus(i2c, device_address=0x3C)
             self.display = adafruit_displayio_ssd1306.SSD1306(display_bus, width=128, height=32)
 
-            boot_text = f"Szia!  NET kereses...\nversion: {VERSION[:4]}"
+            boot_text = f"Hello!  {VERSION[:4]} verzio\nkeres...{SSID[:13]}"
             self.text_area = label.Label(
-                terminalio.FONT, text=boot_text, scale=1, line_spacing=1.7)
+                terminalio.FONT, text=boot_text, scale=1, line_spacing=1.5)
             self.text_area.x = 2
-            self.text_area.y = 8
+            self.text_area.y = 7
             self.display.root_group = self.text_area
 
             dprint("OLED init OK")
