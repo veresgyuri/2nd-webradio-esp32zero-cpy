@@ -22,18 +22,31 @@ A rendszer szíve egy ESP32 kártya, amely az internetről letölti a zenei adat
   
 **Fejlesztési életciklus**
 
-0v0 - Csak egy állomást játszik --> állomás váltás a code.py kódban - a link átírásával  
+**0v0** - Csak egy állomást játszik --> állomás váltás a code.py kódban - a link átírásával  
 
 ![Működési infografika 0v0](images/0v0_infografika.jpg)
 
-1v22 - Állomáslista külön fájlban + egy 'tekerős nyomógomb' ami a váltást és az első állomásra ugrást kezeli  
+**1v22** - Állomáslista külön fájlban + egy 'tekerős nyomógomb' ami a váltást és az első állomásra ugrást kezeli  
 
 ![Működési infografika 1v22](images/1v22_infografika.jpg)
 
-2v.. - OLED kijelző implementálása és a kód véglegesítése  
+**2v13** - OLED kijelző implementálása és ver2 kód véglegesítése  
 
-![Működési infografika 2v..](images/2v12_infografika.jpg)  
+![Működési infografika 2v13](images/2v12_infografika.jpg)  
 
+**3v00** - Procedurális eljárású kód átírása OOP-re  
+3v.. - Állomáslista lapozó menü létrehozása  
+
+![Állomás megjelenítés lejátszáskor](images/OLED_station_name.jpg)  
+
+Rövid gombnyomásra  
+![Menübe lépés](images/OLED_menu.jpg)  
+
+Enkóder tekerés LISTA módban  
+![Állomások lapozása](images/OLED_list.jpg)  
+![Állomások lapozása](images/OLED_lista.jpg)  
+**Rövid gombnyomás** - a kiválasztott állomásra ugrik  
+**Hosszú gombnyomás** - továbbra is RESET funkció  
 
 ## 🚀 Telepítés 3 lépésben
 
