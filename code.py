@@ -220,6 +220,7 @@ EC-11            USB-C           MAX98357a
 # ver 3.11 - játszott/össz db into to display
 # ver 3.20 - 2026-04-03 Vizuális visszajelzés gomb lenyomásra -> LISTA
 # ver 3.21 - add SSID info to boot display
+# ver 3.22 - hibás webcím kezelés (Idle loop)
 
 # --- MODULOK ---
 # Standard
@@ -254,7 +255,7 @@ from adafruit_display_text import label
 import adafruit_displayio_ssd1306
 
 # --- KONFIGURÁCIÓ ÉS VERZIÓ ---
-VERSION = "3.21 - SSID info on boot"
+VERSION = "3.22 - Idle loop"
 DEBUG = True
 KEY_DEBOUNCE_S = 0.05
 LONG_PRESS_MS = 1000  # Hosszú nyomás küszöb (ms)
@@ -294,6 +295,7 @@ class StationManager:
         try:
             with open(self.filename, "r") as f:
                 self.stations = json.load(f)
+            dprint(f"Betöltve {len(self.stations)} állomás.")
             return self.stations
         except Exception as e:
             dprint("JSON hiba:", e)
@@ -429,6 +431,7 @@ class Display:
 
             dprint("OLED init OK")
             return True
+        
         except Exception as e:
             dprint("OLED init hiba:", e)
             return False
@@ -864,7 +867,22 @@ class WebRadio:
                     dprint("Kézi váltás -> Következő adó...")
                     time.sleep(0.5)
                 else:
-                    dprint("Hiba / Szakadás -> SOFT RESET...")
+                    dprint("Hiba / Hibás webcím -> Enkóder forgatással kilépés!")
+                    # Idle loop: enkóder forgatásra kilépés
+                    reset_countdown = 2  # 1 másodperc (0.5s * 2)
+                    while reset_countdown > 0:
+                        action, value, _ = self.controls.handle_input(
+                            self.station_manager.count(), self.current_index
+                        )
+                        if action == self.controls.ACTION_SWITCH_STATION:
+                            dprint("Enkóder forgatás detektálva -> Kilépés")
+                            self.current_index = value
+                            break
+                        time.sleep(0.5)
+                        reset_countdown -= 1
+                    
+                    # Ha nem történt kilépés, akkor soft reload
+                    dprint("Soft reset - supervisor.reload()...")
                     self.display.release()
                     supervisor.reload()
             else:
