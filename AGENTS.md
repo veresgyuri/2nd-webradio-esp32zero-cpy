@@ -1,4 +1,6 @@
-# AGENTS.md
+# AGENTS.md  
+
+> For detailed agent behavior, see `.copilot-instructions.md`
 
 ## Goal
 Generate working CircuitPython code for an ESP32-based low-cost DIY webradio project.
@@ -17,13 +19,13 @@ Generate working CircuitPython code for an ESP32-based low-cost DIY webradio pro
 - If modifying existing code, change only what is necessary.  
 
 ## Project Structure
-- **Running on the ESP32 board (CIRCUITPY drive)**  
+- **Running on the ESP32 board (CIRCUITPY drive - writeable)**  
 `code.py` - The main entry point for the application  
 `stations.json` - Configuration file for the radio station list  
 `settings.toml` - Secure storage for WiFi credentials (SSID and Password)  
 `/lib` - Directory for required CircuitPython library modules  
 
-- **Development only (not deployed to board)**   
+- **Development only (not deployed to board - read only)**   
 `AGENTS.md` - overview (the file currently being read)  
 `.copilot-instructions.md` - Dedicated context and coding rules for AI coding agents    
 `/instructions` - Project-specific rules and hardware interaction logic  
@@ -38,4 +40,4 @@ Each _instructions.md file consists of two parts - providing instructions for bo
 - **Other resources**:  
 `README.md` - Human-oriented documentation  
 `/images` - Project photos and diagrams  
-`/archive` - Human-user area only so forbidden folder to Ai  
+`/archive` - Human-user area so forbidden folder to Ai    
