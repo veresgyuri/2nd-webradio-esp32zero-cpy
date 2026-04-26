@@ -16,28 +16,30 @@ Generate working CircuitPython code for an ESP32-based low-cost DIY webradio pro
 
 ## Output
 - Provide complete, usable code by default.
-- If modifying existing code, change only what is necessary.  
+- If modifying existing code, change only what is necessary.
+- See `.copilot-instructions.md` section "Output & Delivery" for validation policies.
 
 ## Project Structure
-- **Running on the ESP32 board (CIRCUITPY drive - writeable)**  
-`code.py` - The main entry point for the application  
-`stations.json` - Configuration file for the radio station list  
-`settings.toml` - Secure storage for WiFi credentials (SSID and Password)  
-`/lib` - Directory for required CircuitPython library modules  
 
-- **Development only (not deployed to board - read only)**   
-`AGENTS.md` - overview (the file currently being read)  
-`.copilot-instructions.md` - Dedicated context and coding rules for AI coding agents    
-`/instructions` - Project-specific rules and hardware interaction logic  
-├── `CircuitPython_instructions.md`  
-├── `esp32s3zero_instructions.md`  
-├── `max98357a_instructions.md`  
-├── `ec11_instructions.md`  
-└── `128x32_ssd1306_oled_instructions.md`  
+**Writable files (you may edit):**
+- `code.py` - Main application  
+- `stations.json` - Station configuration  
+- `settings.toml` - WiFi credentials  
+- `/lib/*` - CircuitPython libraries  
 
-Each _instructions.md file consists of two parts - providing instructions for both human and AI agents.
+**Read-only files (NEVER modify):**
+- `AGENTS.md` - This overview (keep as reference)  
+- `.copilot-instructions.md` - Agent execution rules
+- `/instructions/*.md` - Hardware-specific guidelines  
+- `README.md` - Human documentation  
+- `/images/*` - Project assets  
+- `/archive/*` - OFF-LIMITS (user-only sandbox)
 
-- **Other resources**:  
-`README.md` - Human-oriented documentation  
-`/images` - Project photos and diagrams  
-`/archive` - Human-user area so forbidden folder to Ai    
+**Hardware modules (reference when coding):**
+- `instructions/CircuitPython_instructions.md` - Core OS  
+- `instructions/esp32s3zero_instructions.md` - MCU & pinout  
+- `instructions/max98357a_instructions.md` - Audio/I2S  
+- `instructions/ec11_instructions.md` - Rotary encoder  
+- `instructions/128x32_ssd1306_oled_instructions.md` - Display  
+
+*Note: Full file permissions detail in `.copilot-instructions.md` section 3.*    
