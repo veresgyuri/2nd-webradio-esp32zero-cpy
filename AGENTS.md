@@ -21,7 +21,12 @@ Generate working CircuitPython code for an ESP32-based low-cost DIY webradio pro
 - If modifying existing code, change only what is necessary.
 - See `.copilot-instructions.md` section "Output & Delivery" for validation policies.
 
-## Project Structure
+## Project Structure  
+**Hardware modules:**
+- `ESP32-S3-Zero` - Main board  
+- `MAX98357a` - Audio DAC / I2S  
+- `EC11` - Rotary encoder with button  
+- `Display` - 128*32 OLED / SSD1306  
 
 **Writable files (you may edit):**
 - `code.py` - Main application  
@@ -29,20 +34,15 @@ Generate working CircuitPython code for an ESP32-based low-cost DIY webradio pro
 - `settings.toml` - WiFi credentials  
 - `/lib/*` - CircuitPython libraries  
 
-**Read-only files (NEVER modify):**
-- `AGENTS.md` - This overview (keep as reference)  
-- `.copilot-instructions.md` - Agent execution rules
-- `/instructions/*.md` - Hardware-specific guidelines  
+**Read-only files (NEVER modify):**  
 - `README.md` - Human documentation  
+- `AGENTS.md` - This overview (keep as reference)  
+- `/instructions/*.md` - Hardware-specific guidelines  
+- `instructions/CircuitPython_instructions.md` - Core OS guidelines  
+- `.copilot-instructions.md` - Agent execution rules
 - `/images/*` - Visual project assets  
-- `/archive/*` - OFF-LIMITS (user-only sandbox)
-
-**Hardware modules (reference when coding):**
-- `instructions/CircuitPython_instructions.md` - Core OS  
-- `instructions/esp32s3zero_instructions.md` - MCU & pinout  
-- `instructions/max98357a_instructions.md` - Audio/I2S  
-- `instructions/ec11_instructions.md` - Rotary encoder  
-- `instructions/128x32_ssd1306_oled_instructions.md` - Display  
+- `/archive/*` - OFF-LIMITS (user-only sandbox)  
+- `/skills/*` - AI agent skill definitions (loaded on-demand)
 
 *Note: Full file permissions detail in `.copilot-instructions.md` section 3.*  
 *Note: Skill-based workflows are optional and on-demand. See `.copilot-instructions.md` section 8 for details and locations.*    
