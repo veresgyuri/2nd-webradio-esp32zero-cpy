@@ -1,53 +1,27 @@
+# AGENTS.md  
+
+> **🛑 AI AGENT DIRECTIVE: DO NOT USE THIS FILE FOR CODING RULES.**
+> All agent rules, file permissions, behaviors, and coding standards are strictly defined in `.copilot-instructions.md`. **Load that file immediately.**
+
 ## Project Overview
-CircuitPython based internet radio running on the ESP32 microcontroller.  
-The objective is to implement a low-cost, hobby and DIY web radio.
+This project builds a low-cost DIY Internet Web Radio using an ESP32-S3 and CircuitPython.
 
-## Target Environment & Hardware
-- Runtime: [CircuitPython 10.1.4](./instructions/CircuitPython_instructions.md)
-- Board: [ESP32-S3-zero](./instructions/esp32s3zero_instructions.md)
-- Audio: [MAX98357a](./instructions/max98357a_instructions.md) (I2S DAC)
-- Display: [0,91" OLED](./instructions/128x32_ssd1306_oled_instructions.md) (SSD1306)
-- Control: [EC11](./instructions/ec11_instructions.md) rotary encoder with push button
+## Goal
+Generate working CircuitPython code.
 
-## Project Structure
-- **Running on the ESP32 board (CIRCUITPY drive)**  
-`code.py` - The main entry point for the application  
-`stations.json` - Configuration file for the radio station list  
-`settings.toml` - Secure storage for WiFi credentials (SSID and Password)  
-`/lib` - Directory for required CircuitPython library modules  
+## Hardware Stack
+- `ESP32-S3-Zero` - Main board  
+- `MAX98357a` - Audio DAC / I2S  
+- `EC11` - Rotary encoder with push button  
+- `Display` - 128*32 OLED / SSD1306  
 
-- **Development only (not deployed to board)**   
-`AGENTS.md` - Dedicated overview for the AI coding agents  
-`.copilot-instructions.md` - Dedicated context and coding rules for AI coding agents    
-`/instructions` - Project-specific rules and hardware interaction logic  
-├── `CircuitPython_instructions.md`  
-├── `esp32s3zero_instructions.md`  
-├── `max98357a_instructions.md`  
-├── `ec11_instructions.md`  
-└── `128x32_ssd1306_oled_instructions.md`  
+## Where to find things (Map)
+- **Main application code:** `code.py`
+- **Configuration:** `stations.json` and `settings.toml`
+- **Hardware-specific instructions:** Found in `/instructions/`
+- **AI Core Execution Rules:** `.copilot-instructions.md`
+- **On-Demand AI Skills:** Found in `/skills/`
 
-Each _instructions.md file consists of two parts - providing instructions for both human and AI agents.
+*Note: For explicit write/read permissions for the files above, refer to `.copilot-instructions.md` Section 3.*
 
-- **Other resources**:  
-`README.md` - Human-oriented documentation  
-`/images` - Project photos and diagrams (non-code)  
-`/archive` - Deprecated or older code versions (ignore for development)  
-
-## Implementation Logic
-AI agents must adhere to the following hierarchical instruction set to ensure compatibility:
-
-**1.** Primary rules: follow [.copilot-instructions.md](.copilot-instructions.md) for coding rules.  
-**2.** Modular instructions: for hardware specifics, check the relevant file in `/instructions`.    
-**3.** Strict compliance: always follow the CODE GENERATION LOGIC sections in instruction files to avoid hardware errors.
-
-## Setup & Deployment
-This is a CircuitPython project, no compilation needed.  
-
-- **Deployment:** manual process by the user - do not automate file transfers. The user copies files to the `CIRCUITPY` drive.  
-- **Dependency management:** ensure all required libraries are present in the `/lib` folder.  
-- **Validation:** monitor the serial REPL output for real-time debugging and messages.  
-
-## Security
-
-- **Credential Safety:** never hardcode WiFi credentials in `code.py` - strictly use `settings.toml`.
-
+*Note: Skill-based workflows are optional and on-demand. See `.copilot-instructions.md` section 8 for details and locations.*    
