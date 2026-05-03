@@ -30,7 +30,7 @@ Generate working CircuitPython code for an ESP32-based low-cost DIY webradio pro
 - **Configuration:** `stations.json` and `settings.toml`
 - **CircuitPython and hardware-specific instructions:** Found in `/instructions/`
 - **AI Core Execution Rules:** `.copilot-instructions.md`
-- **On-Demand AI Skills:** Found in `/skills/`
+- **On-Demand AI Skills:** Found in `/skills/` (local)
 
 *Note: For explicit write/read permissions for the files above, refer to `.copilot-instructions.md` Section 3.*  
 

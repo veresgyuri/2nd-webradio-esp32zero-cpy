@@ -1,6 +1,6 @@
 ---
 description: 'CircuitPython programming language - rules for cPy code generation'
-applyTo: '**/*circuitpython*, **/cpy'
+applyTo: '**/*.py'
 ---
 
 # CircuitPython
