@@ -5,7 +5,7 @@
   {"name": "DANKO", "host": "mr-stream.connectmedia.hu", "port": 80, "path": "/4748/mr7.mp3"},
   {"name": "BARTOK", "host": "mr-stream.connectmedia.hu", "port": 80, "path": "/4741/mr3.mp3"},
   {"name": "SZAKCSI", "host": "mr-stream.connectmedia.hu", "port": 80, "path": "/4691/mr9.mp3"},
-  {"name": "Nemzeti", "host": "mr-stream.connectmedia.hu", "port": 80, "path": "/4744/mr4.mp3"}
+  {"name": "Nemzeti", "host": "mr-stream.connectmedia.hu", "port": 80, "path": "/4744/mr4.mp3"},
  
   {"name": "KATOLIK", "host": "81.0.119.219", "port": 9000, "path": "/live_low.mp3"},
   {"name": "KA.ZENE", "host": "81.0.119.219", "port": 9000, "path": "/vilagzene"},
@@ -21,6 +21,6 @@
   {"name": "Best FM", "host": "icast.connectmedia.hu", "port": 80, "path": "/5102/live.mp3"},
   {"name": "Manna", "host": "icast.connectmedia.hu", "port": 80, "path": "/4780/live.mp3"}
   {"name": "Laza", "host": "stream.lazaradio.com", "port": 80, "path": "/live64.mp3"},
-  {"name": "Youven.", "host": "s2.audiostream.hu", "port": 80, "path": "/juventus_96k"}
+  {"name": "Youven.", "host": "s2.audiostream.hu", "port": 80, "path": "/juventus_96k"},
   {"name": "Rock FM", "host": "icast.connectmedia.hu", "port": 80, "path": "/5301/live.mp3"},
 ]
