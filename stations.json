@@ -19,8 +19,8 @@
   {"name": "Retro", "host": "icast.connectmedia.hu", "port": 80, "path": "/5002/live.mp3"},
   {"name": "BASE FM", "host": "icast.connectmedia.hu", "port": 80, "path": "/5401/live.mp3"},
   {"name": "Best FM", "host": "icast.connectmedia.hu", "port": 80, "path": "/5102/live.mp3"},
-  {"name": "Manna", "host": "icast.connectmedia.hu", "port": 80, "path": "/4780/live.mp3"}
+  {"name": "Manna", "host": "icast.connectmedia.hu", "port": 80, "path": "/4780/live.mp3"},
   {"name": "Laza", "host": "stream.lazaradio.com", "port": 80, "path": "/live64.mp3"},
   {"name": "Youven.", "host": "s2.audiostream.hu", "port": 80, "path": "/juventus_96k"},
-  {"name": "Rock FM", "host": "icast.connectmedia.hu", "port": 80, "path": "/5301/live.mp3"},
+  {"name": "Rock FM", "host": "icast.connectmedia.hu", "port": 80, "path": "/5301/live.mp3"}
 ]
