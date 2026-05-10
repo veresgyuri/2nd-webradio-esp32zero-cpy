@@ -296,7 +296,7 @@ class StationManager:
     def load(self):
         """Load stations from JSON file."""
         try:
-            with open(self.filename, "r") as f:
+            with open(self.filename, "r", encoding="utf-8") as f:
                 self.stations = json.load(f)
             dprint(f"Betöltve {len(self.stations)} állomás.")
             return self.stations
