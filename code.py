@@ -463,14 +463,14 @@ class Display:
                 station_name = station_name[:5] + ".."
             self.text_area.text = station_name
 
-    def show_playback_hint(self, station_name):
+    def show_playback_hint(self):
         """ Lejátszási mód MENU felirattal (lenyomás visszajelzés) """
         if self.text_area:
             self.current_mode = "playback"
             self.text_area.scale = 2
             self.text_area.y = 20
             # scale2 = 10 karakter fér el
-            self.text_area.text = f"- LISTA -"
+            self.text_area.text = "- LISTA -"
 
     def restore_playback(self):
         """ Visszaállítja az eredeti lejátszási nézetet """
@@ -787,9 +787,7 @@ class WebRadio:
 
                 # MENU jelzés lenyomáskor (vizuális visszajelzés)
                 if action == self.controls.ACTION_SHOW_MENU_HINT and not self.controls.is_in_menu():
-                    self.display.show_playback_hint(
-                        self.station_manager.get_station_name(self.current_index)
-                    )
+                    self.display.show_playback_hint()
                     self.hint_shown = True
                     continue  # Ne csináljunk mást, csak frissítsük a kijelzőt
 
