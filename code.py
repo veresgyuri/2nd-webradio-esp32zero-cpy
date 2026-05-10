@@ -397,7 +397,7 @@ class AudioPlayer:
         if self.audio:
             try:
                 self.audio.stop()
-            except:
+            except Exception:
                 pass
 
     def deinit(self):
@@ -406,14 +406,14 @@ class AudioPlayer:
             try:
                 self.audio.stop()
                 self.audio.deinit()
-            except:
+            except Exception:
                 pass
             self.audio = None
 
         if self.mp3_stream:
             try:
                 self.mp3_stream.deinit()
-            except:
+            except Exception:
                 pass
             self.mp3_stream = None
 
