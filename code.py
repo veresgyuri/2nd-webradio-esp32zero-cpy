@@ -278,6 +278,7 @@ PIN_OLED_SDA = board.IO5
 
 # --- SEGÉDFÜGGVÉNYEK ---
 def dprint(*args, **kwargs):
+    """Print debug messages if DEBUG mode is enabled."""
     if DEBUG:
         print(*args, **kwargs)
 
@@ -288,10 +289,12 @@ class StationManager:
     """ Állomások betöltése és kezelése """
 
     def __init__(self, filename="stations.json"):
+        """Initialize station manager with filename."""
         self.filename = filename
         self.stations = []
 
     def load(self):
+        """Load stations from JSON file."""
         try:
             with open(self.filename, "r") as f:
                 self.stations = json.load(f)
@@ -303,6 +306,7 @@ class StationManager:
             return []
 
     def get_station(self, index):
+        """Return station at given index or None."""
         if 0 <= index < len(self.stations):
             return self.stations[index]
         return None
@@ -313,6 +317,7 @@ class StationManager:
         return station['name'] if station else "???"
 
     def count(self):
+        """Return total number of stations."""
         return len(self.stations)
 
 
@@ -320,10 +325,12 @@ class WiFiManager:
     """ WiFi kapcsolat kezelése """
 
     def __init__(self, ssid, password):
+        """Initialize WiFi manager with credentials."""
         self.ssid = ssid
         self.password = password
 
     def ensure_connection(self):
+        """Ensure WiFi connection with optimized settings."""
         gc.collect()
         wifi.radio.tx_power = 8.5
 
@@ -348,10 +355,12 @@ class AudioPlayer:
     """ I2S Audio és MP3 dekóder kezelése """
 
     def __init__(self):
+        """Initialize audio player with None values."""
         self.audio = None
         self.mp3_stream = None
 
     def init(self):
+        """Initialize I2S audio output."""
         try:
             self.audio = audiobusio.I2SOut(
                 bit_clock=PIN_I2S_BCLK,
@@ -365,6 +374,7 @@ class AudioPlayer:
             return False
 
     def play(self, sock):
+        """Play MP3 stream from socket."""
         if not self.audio:
             return False
 
@@ -377,11 +387,13 @@ class AudioPlayer:
             return False
 
     def is_playing(self):
+        """Check if audio is currently playing."""
         if self.audio:
             return self.audio.playing
         return False
 
     def stop(self):
+        """Stop audio playback."""
         if self.audio:
             try:
                 self.audio.stop()
@@ -389,6 +401,7 @@ class AudioPlayer:
                 pass
 
     def deinit(self):
+        """Deinitialize audio and MP3 decoder resources."""
         if self.audio:
             try:
                 self.audio.stop()
@@ -409,12 +422,14 @@ class Display:
     """ OLED kijelző kezelése (SSD1306, 128x32) """
 
     def __init__(self):
+        """Initialize display attributes."""
         self.text_area = None
         self.display = None
         self.current_mode = "playback"  # "playback" vagy "menu"
         self.normal_station_name = ""   # Tárolja az eredeti nevet a visszaállításhoz
 
     def init(self):
+        """Initialize SSD1306 OLED display with boot screen."""
         displayio.release_displays()
 
         try:
@@ -483,7 +498,10 @@ class Display:
             top_line = f">>> {playing_short} >>>"
 
             # Alsó sor: lapozható lista
-            browsing_name = station_names[browsing_index] if browsing_index < len(station_names) else "???"
+            if browsing_index < len(station_names):
+                browsing_name = station_names[browsing_index]
+            else:
+                browsing_name = "???"
             if len(browsing_name) > 7:
                 browsing_name = browsing_name[:5] + ".."
 
@@ -495,6 +513,7 @@ class Display:
             self.text_area.y = 4  # Felső margó
 
     def release(self):
+        """Release display resources."""
         displayio.release_displays()
 
 
@@ -511,6 +530,7 @@ class Controls:
     ACTION_SHOW_MENU_HINT = 6      # MENU felirat mutatása lenyomáskor
 
     def __init__(self):
+        """Initialize control system with encoder and button."""
         self.encoder = None
         self.key = None
         self.last_position = 0
@@ -520,6 +540,7 @@ class Controls:
         self.menu_cursor = 0          # Kurzor pozíció a menüben
 
     def setup(self):
+        """Initialize encoder and button hardware."""
         self.encoder = rotaryio.IncrementalEncoder(PIN_ENC_S1, PIN_ENC_S2)
         self.key = digitalio.DigitalInOut(PIN_ENC_KEY)
         self.key.direction = digitalio.Direction.INPUT
@@ -537,12 +558,15 @@ class Controls:
         dprint("Menü mód KI")
 
     def is_in_menu(self):
+        """Return menu mode state."""
         return self.in_menu
 
     def get_menu_cursor(self):
+        """Return current menu cursor position."""
         return self.menu_cursor
 
     def set_menu_cursor(self, cursor):
+        """Set menu cursor position."""
         self.menu_cursor = cursor
 
     def sync_position(self, current_index):
@@ -648,6 +672,7 @@ class WebRadio:
     """ Fő osztály - összefogja az összes komponenst """
 
     def __init__(self):
+        """Initialize all radio components."""
         self.station_manager = StationManager()
         self.wifi_manager = WiFiManager(SSID, PASSWORD)
         self.audio_player = AudioPlayer()
@@ -661,6 +686,7 @@ class WebRadio:
         self.hint_shown = False      # Ha a MENU jelzés aktív
 
     def init_hardware(self):
+        """Initialize all hardware components."""
         dprint("\n" + "=" * 40)
         dprint(f"--- ESP32-S3 WebRadio {VERSION} ---")
         dprint("=" * 40)
@@ -668,6 +694,7 @@ class WebRadio:
         self.display.init()
 
     def load_stations(self):
+        """Load stations from configuration file."""
         self.stations = self.station_manager.load()
         if not self.stations:
             dprint("KRITIKUS HIBA: Nincs állomáslista!")
@@ -676,14 +703,18 @@ class WebRadio:
         return self.stations
 
     def restore_nvm(self):
+        """Restore last selected station from NVM."""
         saved_index = microcontroller.nvm[0]
         if saved_index >= self.station_manager.count():
             saved_index = 0
             microcontroller.nvm[0] = 0
         self.current_index = saved_index
-        dprint(f"Indítás a {self.current_index}. csatornán: {self.station_manager.get_station_name(self.current_index)}")
+        idx = self.current_index
+        name = self.station_manager.get_station_name(idx)
+        dprint(f"Indítás a {idx}. csatornán: {name}")
 
     def init_network(self):
+        """Initialize network socket pool."""
         self.pool = socketpool.SocketPool(wifi.radio)
 
     def _get_station_names(self):
