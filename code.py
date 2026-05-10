@@ -300,7 +300,7 @@ class StationManager:
                 self.stations = json.load(f)
             dprint(f"Betöltve {len(self.stations)} állomás.")
             return self.stations
-        except Exception as e:
+        except (OSError, ValueError) as e:
             dprint("JSON hiba:", e)
             self.stations = []
             return []
@@ -346,7 +346,7 @@ class WiFiManager:
             wifi.radio.connect(self.ssid, self.password)
             dprint("WiFi SIKERES! IP:", wifi.radio.ipv4_address)
             return True
-        except Exception as e:
+        except OSError as e:
             dprint("WiFi hiba:", e)
             return False
 
@@ -368,7 +368,7 @@ class AudioPlayer:
                 data=PIN_I2S_DIN
             )
             return True
-        except Exception as e:
+        except (RuntimeError, OSError) as e:
             dprint("I2S Init hiba:", e)
             self.audio = None
             return False
@@ -382,7 +382,7 @@ class AudioPlayer:
             self.mp3_stream = audiomp3.MP3Decoder(sock)
             self.audio.play(self.mp3_stream)
             return True
-        except Exception as e:
+        except (RuntimeError, OSError) as e:
             dprint("MP3 play hiba:", e)
             return False
 
@@ -755,7 +755,7 @@ class WebRadio:
             while True:
                 n = sock.recv_into(buffer, 1)
                 if n == 0:
-                    raise Exception("Socket lezárt (Remote end closed)")
+                    raise ConnectionError("Socket lezárt (Remote end closed)")
                 prev += buffer
                 if b"\r\n\r\n" in prev:
                     break
