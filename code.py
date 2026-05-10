@@ -3,24 +3,24 @@
 """ ************ KAPCSOLÁSI RAJZ ******************
 
              TÁPFESZÜLTSÉG
-                 REPL         
-                  ↓                       
+                 REPL
+                  ↓
 EC-11            USB-C           MAX98357a
-┌┴┐         ┌────┬──┬────┐     ┌──────────┐ 
- R          │    └──┘ IO7├─────┤DIN   OUT+├-─--┬─────┐ 
+┌┴┐         ┌────┬──┬────┐     ┌──────────┐
+ R          │    └──┘ IO7├─────┤DIN   OUT+├-─--┬─────┐
  O ── CH+ ──┤IO11     IO8├─────┤BCLK      │    │     🔊
- T ── CH- ──┤IO12     IO9├─────┤LRC       │   ┌┴┐   8Ω/1W  
+ T ── CH- ──┤IO12     IO9├─────┤LRC       │   ┌┴┐   8Ω/1W
  A          │         GND├─────┤GND       │   │ ←--──┘
  R ── KEY ──┤IO10     3V3├──┬──┤Vin       │   └┬┘56R
- Y          │            │  └──┤Gain  OUT-├─---┘ 1W        
-└ ┘         |            │     └──────────┘               
+ Y          │            │  └──┤Gain  OUT-├─---┘ 1W
+└ ┘         |            │     └──────────┘
             │  ESP32-S3  │   Gain to 3V3 -> 6 dB
-            │    zero    │   
+            │    zero    │
             │            │        0.91" OLED 128x32
             │            │     ┌─────────────────────┐
             |         IO4├─────┤SCL     SSD1306     +├─ 3V3
             │         IO5├─────┤SDA                 -├─ GND
-            └────────────┘     └─────────────────────┘                       
+            └────────────┘     └─────────────────────┘
 
 ************ ver 3.xx - MAIN PROGRAM FLOW ******************
 
@@ -198,7 +198,7 @@ EC-11            USB-C           MAX98357a
                     │  (újraindítás)  │
                     │                 │
                     └─────────────────┘
-      
+
 *** https://github.com/veresgyuri/2nd-webradio-esp32zero-cpy """
 
 # ver 0.00 - 2026-02-19 Működő minimál kód -> archived
@@ -286,11 +286,11 @@ def dprint(*args, **kwargs):
 
 class StationManager:
     """ Állomások betöltése és kezelése """
-    
+
     def __init__(self, filename="stations.json"):
         self.filename = filename
         self.stations = []
-    
+
     def load(self):
         try:
             with open(self.filename, "r") as f:
@@ -301,28 +301,28 @@ class StationManager:
             dprint("JSON hiba:", e)
             self.stations = []
             return []
-    
+
     def get_station(self, index):
         if 0 <= index < len(self.stations):
             return self.stations[index]
         return None
-    
+
     def get_station_name(self, index):
         """ Csak az állomás nevét adja vissza (menühez) """
         station = self.get_station(index)
         return station['name'] if station else "???"
-    
+
     def count(self):
         return len(self.stations)
 
 
 class WiFiManager:
     """ WiFi kapcsolat kezelése """
-    
+
     def __init__(self, ssid, password):
         self.ssid = ssid
         self.password = password
-    
+
     def ensure_connection(self):
         gc.collect()
         wifi.radio.tx_power = 8.5
@@ -346,11 +346,11 @@ class WiFiManager:
 
 class AudioPlayer:
     """ I2S Audio és MP3 dekóder kezelése """
-    
+
     def __init__(self):
         self.audio = None
         self.mp3_stream = None
-    
+
     def init(self):
         try:
             self.audio = audiobusio.I2SOut(
@@ -363,11 +363,11 @@ class AudioPlayer:
             dprint("I2S Init hiba:", e)
             self.audio = None
             return False
-    
+
     def play(self, sock):
         if not self.audio:
             return False
-        
+
         try:
             self.mp3_stream = audiomp3.MP3Decoder(sock)
             self.audio.play(self.mp3_stream)
@@ -375,19 +375,19 @@ class AudioPlayer:
         except Exception as e:
             dprint("MP3 play hiba:", e)
             return False
-    
+
     def is_playing(self):
         if self.audio:
             return self.audio.playing
         return False
-    
+
     def stop(self):
         if self.audio:
             try:
                 self.audio.stop()
             except:
                 pass
-    
+
     def deinit(self):
         if self.audio:
             try:
@@ -396,7 +396,7 @@ class AudioPlayer:
             except:
                 pass
             self.audio = None
-        
+
         if self.mp3_stream:
             try:
                 self.mp3_stream.deinit()
@@ -407,13 +407,13 @@ class AudioPlayer:
 
 class Display:
     """ OLED kijelző kezelése (SSD1306, 128x32) """
-    
+
     def __init__(self):
         self.text_area = None
         self.display = None
         self.current_mode = "playback"  # "playback" vagy "menu"
         self.normal_station_name = ""   # Tárolja az eredeti nevet a visszaállításhoz
-    
+
     def init(self):
         displayio.release_displays()
 
@@ -431,11 +431,11 @@ class Display:
 
             dprint("OLED init OK")
             return True
-        
+
         except Exception as e:
             dprint("OLED init hiba:", e)
             return False
-    
+
     def show_playback(self, station_name):
         """ Lejátszási mód: nagy betű, 1 sor """
         if self.text_area:
@@ -447,7 +447,7 @@ class Display:
             if len(station_name) > 7:
                 station_name = station_name[:5] + ".."
             self.text_area.text = station_name
-    
+
     def show_playback_hint(self, station_name):
         """ Lejátszási mód MENU felirattal (lenyomás visszajelzés) """
         if self.text_area:
@@ -456,12 +456,12 @@ class Display:
             self.text_area.y = 20
             # scale2 = 10 karakter fér el
             self.text_area.text = f"- LISTA -"
-    
+
     def restore_playback(self):
         """ Visszaállítja az eredeti lejátszási nézetet """
         if self.text_area and self.normal_station_name:
             self.show_playback(self.normal_station_name)
-    
+
     def show_menu(self, current_playing_name, browsing_index, station_names, total_stations):
         """
         Menü mód: 2 soros megjelenítés
@@ -470,37 +470,37 @@ class Display:
         """
         if self.text_area and self.display:
             self.current_mode = "menu"
-            
+
             # Váltás kisebb betűméretre (scale1 = 21 karakter)
             if self.text_area.scale != 1:
                 self.text_area.scale = 1
                 self.text_area.line_spacing = 1.5
-            
+
             # Felső sor: [PLAY] + rövidített név
             playing_short = current_playing_name
             if len(playing_short) > 12:
                 playing_short = playing_short[:10] + ".."
             top_line = f">>> {playing_short} >>>"
-            
+
             # Alsó sor: lapozható lista
             browsing_name = station_names[browsing_index] if browsing_index < len(station_names) else "???"
             if len(browsing_name) > 7:
                 browsing_name = browsing_name[:5] + ".."
-            
+
             # Nyilak jelzik a lapozhatóságot
             bottom_line = f"< {browsing_index}.{browsing_name} >  {total_stations} db"
-            
+
             # Két sor összefűzése új sor karakterrel
             self.text_area.text = f"{top_line}\n{bottom_line}"
             self.text_area.y = 4  # Felső margó
-    
+
     def release(self):
         displayio.release_displays()
 
 
 class Controls:
     """ Rotary encoder és gomb kezelése (időméréssel, menü állapottal) """
-    
+
     # Művelet típusok
     ACTION_NONE = 0
     ACTION_SWITCH_STATION = 1      # Enkóder tekerés normál módban
@@ -509,7 +509,7 @@ class Controls:
     ACTION_MENU_SELECT = 4         # Rövid nyomás menüben (kiválasztás)
     ACTION_HARD_RESET = 5          # Hosszú nyomás
     ACTION_SHOW_MENU_HINT = 6      # MENU felirat mutatása lenyomáskor
-    
+
     def __init__(self):
         self.encoder = None
         self.key = None
@@ -518,42 +518,42 @@ class Controls:
         self.press_start_time = None
         self.in_menu = False
         self.menu_cursor = 0          # Kurzor pozíció a menüben
-    
+
     def setup(self):
         self.encoder = rotaryio.IncrementalEncoder(PIN_ENC_S1, PIN_ENC_S2)
         self.key = digitalio.DigitalInOut(PIN_ENC_KEY)
         self.key.direction = digitalio.Direction.INPUT
         self.key.pull = digitalio.Pull.UP
         return self.encoder, self.key
-    
+
     def enter_menu(self):
         """ Belépés menü módba """
         self.in_menu = True
         dprint("Menü mód BE")
-    
+
     def exit_menu(self):
         """ Kilépés menü módból """
         self.in_menu = False
         dprint("Menü mód KI")
-    
+
     def is_in_menu(self):
         return self.in_menu
-    
+
     def get_menu_cursor(self):
         return self.menu_cursor
-    
+
     def set_menu_cursor(self, cursor):
         self.menu_cursor = cursor
-    
+
     def sync_position(self, current_index):
         """ Enkóder pozíció szinkronizálása (normál módban) """
         self.encoder.position = current_index
         self.last_position = current_index
-    
+
     def sync_menu_cursor(self, cursor):
         """ Kurzor szinkronizálása (menüben) """
         self.menu_cursor = cursor
-    
+
     def handle_input(self, stations_len, current_index):
         """
         Kezeli a felhasználói beavatkozást.
@@ -565,14 +565,13 @@ class Controls:
         new_index = current_index
         action = self.ACTION_NONE
         hard_reset = False
-        
         # 1. ENKÓDER FIGYELÉSE
         position = self.encoder.position
-        
+
         if position != self.last_position:
             delta = position - self.last_position
             self.last_position = position
-            
+
             if self.in_menu:
                 # Menü módban: kurzor mozgatása
                 new_cursor = self.menu_cursor + delta
@@ -581,7 +580,7 @@ class Controls:
                     new_cursor = 0
                 elif new_cursor < 0:
                     new_cursor = stations_len - 1
-                
+
                 self.menu_cursor = new_cursor
                 action = self.ACTION_MENU_BROWSE
                 dprint(f"Menü kurzor: {self.menu_cursor}")
@@ -592,30 +591,30 @@ class Controls:
                 microcontroller.nvm[0] = new_index
                 dprint(f"Váltás -> Mentve NVM-be: {new_index}")
                 action = self.ACTION_SWITCH_STATION
-        
+
         # 2. GOMB (KEY) FIGYELÉSE (időméréssel + azonnali visszajelzés)
         try:
             current_key_state = self.key.value
         except Exception:
             current_key_state = True
-        
+
         # LENYOMÁS érzékelése (True -> False)
         if (not current_key_state) and self.last_key_state:
             # Eltároljuk a lenyomás időpontját
             self.press_start_time = time.monotonic()
             dprint("Gomb LENYOMVA")
-            
+
             # Azonnali vizuális visszajelzés (ha nem vagyunk menüben)
             if not self.in_menu:
                 action = self.ACTION_SHOW_MENU_HINT
                 dprint("MENU jelzés megjelenítve")
-        
+
         # FELENGEDÉS érzékelése (False -> True)
         elif current_key_state and (not self.last_key_state):
             if self.press_start_time is not None:
                 press_duration_ms = (time.monotonic() - self.press_start_time) * 1000
                 self.press_start_time = None
-                
+
                 if press_duration_ms >= LONG_PRESS_MS:
                     # Hosszú nyomás -> Hard Reset
                     dprint(f"Hosszú nyomás: {press_duration_ms:.0f}ms -> HARD RESET")
@@ -636,38 +635,38 @@ class Controls:
                         # Normál módban: belépés menübe
                         action = self.ACTION_ENTER_MENU
                         dprint("Belépés menübe")
-        
+
         self.last_key_state = current_key_state
-        
+
         # Érték visszaadása (új index vagy kurzor)
         value = new_index if not self.in_menu else self.menu_cursor
-        
+
         return action, value, hard_reset
 
 
 class WebRadio:
     """ Fő osztály - összefogja az összes komponenst """
-    
+
     def __init__(self):
         self.station_manager = StationManager()
         self.wifi_manager = WiFiManager(SSID, PASSWORD)
         self.audio_player = AudioPlayer()
         self.display = Display()
         self.controls = Controls()
-        
+
         self.current_index = 0
         self.pool = None
         self.stations = []          # Állomások listája
         self.menu_cursor_backup = 0  # Backup menü kurzor (kilépéskor visszaállítás)
         self.hint_shown = False      # Ha a MENU jelzés aktív
-    
+
     def init_hardware(self):
         dprint("\n" + "=" * 40)
         dprint(f"--- ESP32-S3 WebRadio {VERSION} ---")
         dprint("=" * 40)
         self.controls.setup()
         self.display.init()
-    
+
     def load_stations(self):
         self.stations = self.station_manager.load()
         if not self.stations:
@@ -675,7 +674,7 @@ class WebRadio:
             while True:
                 time.sleep(1)
         return self.stations
-    
+
     def restore_nvm(self):
         saved_index = microcontroller.nvm[0]
         if saved_index >= self.station_manager.count():
@@ -683,16 +682,16 @@ class WebRadio:
             microcontroller.nvm[0] = 0
         self.current_index = saved_index
         dprint(f"Indítás a {self.current_index}. csatornán: {self.station_manager.get_station_name(self.current_index)}")
-    
+
     def init_network(self):
         self.pool = socketpool.SocketPool(wifi.radio)
-    
+
     def _get_station_names(self):
         """ Állomásnevek listájának lekérése (menühöz) """
         return [s['name'] for s in self.stations]
-    
+
     def stream_radio(self, station_data):
-        """ 
+        """
         Kapcsolódás, Pufferelés, Lejátszás.
         Visszatérés: manual_switch (True=felhasználó váltott, False=hiba)
         """
@@ -750,11 +749,11 @@ class WebRadio:
                 action, value, hard_reset = self.controls.handle_input(
                     self.station_manager.count(), self.current_index
                 )
-                
+
                 # Hard reset
                 if hard_reset:
                     microcontroller.reset()
-                
+
                 # MENU jelzés lenyomáskor (vizuális visszajelzés)
                 if action == self.controls.ACTION_SHOW_MENU_HINT and not self.controls.is_in_menu():
                     self.display.show_playback_hint(
@@ -762,7 +761,7 @@ class WebRadio:
                     )
                     self.hint_shown = True
                     continue  # Ne csináljunk mást, csak frissítsük a kijelzőt
-                
+
                 # Normál módban: állomás váltás
                 if action == self.controls.ACTION_SWITCH_STATION and not self.controls.is_in_menu():
                     self.current_index = value
@@ -770,7 +769,7 @@ class WebRadio:
                     self.audio_player.stop()
                     dprint(f"Váltás állomásra: {self.current_index}")
                     break
-                
+
                 # Belépés menübe (rövid nyomás normál módban, felengedéskor)
                 elif action == self.controls.ACTION_ENTER_MENU:
                     # Ha volt MENU jelzés, távolítsuk el
@@ -789,7 +788,7 @@ class WebRadio:
                         len(station_names)
                     )
                     dprint("Menü megnyitva")
-                
+
                 # Menüben: böngészés (enkóder tekerés)
                 elif action == self.controls.ACTION_MENU_BROWSE and self.controls.is_in_menu():
                     # Frissítjük a kijelzőt az új kurzor pozícióval
@@ -802,7 +801,7 @@ class WebRadio:
                         len(station_names)
                     )
                     dprint(f"Menü böngészés: {station_names[self.controls.get_menu_cursor()]}")
-                
+
                 # Menüben: kiválasztás (rövid nyomás)
                 elif action == self.controls.ACTION_MENU_SELECT and self.controls.is_in_menu():
                     selected_station_index = self.controls.get_menu_cursor()
@@ -812,10 +811,10 @@ class WebRadio:
                     self.audio_player.stop()
                     dprint(f"Menü kiválasztás: {selected_station_index}")
                     break
-                
+
                 # CPU pihentetés
                 time.sleep(0.05)
-            
+
             # Menüből kiválasztással léptünk ki
             if menu_exit_with_select and selected_station_index != self.current_index:
                 self.current_index = selected_station_index
@@ -844,7 +843,7 @@ class WebRadio:
                 self.hint_shown = False
 
         return manual_switch
-    
+
     def run(self):
         """ Fő program ciklus """
         self.init_hardware()
@@ -860,7 +859,7 @@ class WebRadio:
                     self.current_index = 0
                     microcontroller.nvm[0] = 0
                     continue
-                
+
                 user_switched = self.stream_radio(station)
 
                 if user_switched:
@@ -880,7 +879,7 @@ class WebRadio:
                             break
                         time.sleep(0.5)
                         reset_countdown -= 1
-                    
+
                     # Ha nem történt kilépés, akkor soft reload
                     dprint("Soft reset - supervisor.reload()...")
                     self.display.release()
