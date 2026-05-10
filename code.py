@@ -447,7 +447,7 @@ class Display:
             dprint("OLED init OK")
             return True
 
-        except Exception as e:
+        except (RuntimeError, OSError) as e:
             dprint("OLED init hiba:", e)
             return False
 
@@ -619,7 +619,7 @@ class Controls:
         # 2. GOMB (KEY) FIGYELÉSE (időméréssel + azonnali visszajelzés)
         try:
             current_key_state = self.key.value
-        except Exception:
+        except OSError:
             current_key_state = True
 
         # LENYOMÁS érzékelése (True -> False)
@@ -644,7 +644,7 @@ class Controls:
                     dprint(f"Hosszú nyomás: {press_duration_ms:.0f}ms -> HARD RESET")
                     try:
                         microcontroller.nvm[0] = 0
-                    except Exception as e:
+                    except OSError as e:
                         dprint("NVM hiba:", e)
                     hard_reset = True
                     action = self.ACTION_HARD_RESET
@@ -850,7 +850,7 @@ class WebRadio:
                 microcontroller.nvm[0] = self.current_index
                 dprint(f"NVM mentés új állomásra: {self.current_index}")
 
-        except Exception as e:
+        except (OSError, ConnectionError) as e:
             dprint("Stream hiba / Szakadás:", e)
             # Ha menüben voltunk, lépjünk ki belőle
             if self.controls.is_in_menu():
