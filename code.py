@@ -618,7 +618,7 @@ class Controls:
 
                 self.menu_cursor = new_cursor
                 action = self.ACTION_MENU_BROWSE
-                dprint(f"Menü kurzor: {self.menu_cursor}")
+                dprint(f"Állomás kurzor: {self.menu_cursor}")
             else:
                 # Normál módban: állomás váltás
                 new_index = (current_index + delta) % stations_len
@@ -821,7 +821,7 @@ class WebRadio:
                     continue  # Ne csináljunk mást, csak frissítsük a kijelzőt
 
                 # Normál módban: állomás váltás
-                if action == self.controls.ACTION_SWITCH_STATION and not self.controls.is_in_menu():
+                if action == self.controls.ACTION_SWITCH_STATION:
                     self.current_index = value
                     manual_switch = True
                     self.audio_player.stop()
@@ -848,7 +848,7 @@ class WebRadio:
                     dprint("Állomáslista menü megnyitva")
 
                 # Menüben: állomáslista böngészés (enkóder tekerés)
-                elif action == self.controls.ACTION_MENU_BROWSE and self.controls.is_in_menu():
+                elif action == self.controls.ACTION_MENU_BROWSE:
                     # Frissítjük a kijelzőt az új kurzor pozícióval
                     station_names = self._get_station_names()
                     current_playing = self.station_manager.get_station_name(self.current_index)
@@ -858,10 +858,10 @@ class WebRadio:
                         station_names,
                         len(station_names)
                     )
-                    dprint(f"Állomás böngészés: {station_names[self.controls.get_menu_cursor()]}")
+                    dprint(f"Lista böngészés: {station_names[self.controls.get_menu_cursor()]}")
 
                 # Menüben: állomás kiválasztás (rövid nyomás)
-                elif action == self.controls.ACTION_MENU_SELECT and self.controls.is_in_menu():
+                elif action == self.controls.ACTION_MENU_SELECT:
                     selected_station_index = self.controls.get_menu_cursor()
                     self.controls.exit_menu()
                     menu_exit_with_select = True
