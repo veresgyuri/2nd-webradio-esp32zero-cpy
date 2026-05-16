@@ -86,7 +86,7 @@ EC-11            USB-C           MAX98357a
 │  │              ┌─────────────┴───────────────┐                      │   │
 │  │              │                             │                      │   │
 │  │         [RÖVID NYOMÁS]                [HOSSZÚ NYOMÁS]             │   │
-│  │          (< 1000ms)                     (>= 1000ms)               │   │
+│  │          (< 3000ms)                     (>= 3000ms)               │   │
 │  │              │                             │                      │   │
 │  │    ┌─────────┴─────────────┐               │                      │   │
 │  │    │                       │               │                      │   │
@@ -96,10 +96,10 @@ EC-11            USB-C           MAX98357a
 │  │  ENTER_MENU             MENU_SELECT        │                      │   │
 │  │  - Belépés menübe       - Kiválasztás      │                      │   │
 │  │  - OLED 2 soros         - Kilépés menüből  │                      │   │
-│  │  - Zene megy tovább     - NVM mentés       │                      │   │
-│  │                         - audio.stop()     │    ACTION_HARD_RESET
-│  │                         -> break           │    - NVM[0]=0 állomásra
-│  │                                            │    - microcontroller.reset()
+│  │  - Zene megy tovább     - NVM mentés       │ ACTION_HARD_RESET    │   │
+│  │                         - audio.stop()     │ - display -RESET-    │   │
+│  │                         -> break           │ - NVM[0]=0 állomásra │   │
+│  │                                            │ - microcontroller.reset()│
 │  │                                            │                      │   │
 │  │                                            └─────────► HARD RESET │   │
 │  │                                                                   │   │
@@ -221,6 +221,8 @@ EC-11            USB-C           MAX98357a
 # ver 3.20 - 2026-04-03 Vizuális visszajelzés gomb lenyomásra -> LISTA
 # ver 3.21 - add SSID info to boot display
 # ver 3.22 - hibás webcím kezelés (Idle loop)
+# ver 3.23 - 2026-05-10 RESET visszajelzés kijelzőn (3 sec)
+
 
 # --- MODULOK ---
 # Standard
@@ -255,10 +257,10 @@ from adafruit_display_text import label
 import adafruit_displayio_ssd1306
 
 # --- KONFIGURÁCIÓ ÉS VERZIÓ ---
-VERSION = "3.22 - Idle loop"
+VERSION = "3.23 - display RESET"
 DEBUG = True
 KEY_DEBOUNCE_S = 0.05
-LONG_PRESS_MS = 1000  # Hosszú nyomás küszöb (ms)
+LONG_PRESS_MS = 3000  # Hosszú nyomás küszöb (ms)
 
 # --- GLOBÁLIS KONSTANSOK (Hálózat) ---
 SSID = os.getenv("CIRCUITPY_WIFI_SSID")
@@ -472,6 +474,13 @@ class Display:
             # scale2 = 10 karakter fér el
             self.text_area.text = "- LISTA -"
 
+    def show_reset_warning(self):
+        """Reset figyelmeztetés megjelenítése - from 3v23"""
+        if self.text_area:
+            self.text_area.scale = 2
+            self.text_area.y = 20
+            self.text_area.text = "- RESET -"
+
     def restore_playback(self):
         """ Visszaállítja az eredeti lejátszási nézetet """
         if self.text_area and self.normal_station_name:
@@ -528,6 +537,7 @@ class Controls:
     ACTION_MENU_SELECT = 4         # Rövid nyomás menüben (kiválasztás)
     ACTION_HARD_RESET = 5          # Hosszú nyomás
     ACTION_SHOW_MENU_HINT = 6      # MENU felirat mutatása lenyomáskor
+    ACTION_LONG_PRESS_WARNING = 7  # Hosszú nyomás figyelmeztetés (3mp után)
 
     def __init__(self):
         """Initialize control system with encoder and button."""
@@ -536,6 +546,7 @@ class Controls:
         self.last_position = 0
         self.last_key_state = True
         self.press_start_time = None
+        self.long_press_warned = False  # Már mutatjuk a RESET figyelmeztetést
         self.in_menu = False
         self.menu_cursor = 0          # Kurzor pozíció a menüben
 
@@ -550,12 +561,12 @@ class Controls:
     def enter_menu(self):
         """ Belépés menü módba """
         self.in_menu = True
-        dprint("Menü mód BE")
+        dprint("Állomáslista - menü mód BE")
 
     def exit_menu(self):
         """ Kilépés menü módból """
         self.in_menu = False
-        dprint("Menü mód KI")
+        dprint("Állomáslista - menü mód KI")
 
     def is_in_menu(self):
         """Return menu mode state."""
@@ -626,18 +637,29 @@ class Controls:
         if (not current_key_state) and self.last_key_state:
             # Eltároljuk a lenyomás időpontját
             self.press_start_time = time.monotonic()
+            self.long_press_warned = False  # Reset az flag-et
             dprint("Gomb LENYOMVA")
 
             # Azonnali vizuális visszajelzés (ha nem vagyunk menüben)
             if not self.in_menu:
                 action = self.ACTION_SHOW_MENU_HINT
-                dprint("MENU jelzés megjelenítve")
+                dprint("- LISTA - jelzés megjelenítve")
+
+        # NÖV: Még nyomva tartás alatt - hosszú nyomás figyelmeztetés
+        elif (not current_key_state) and (not self.last_key_state) and self.press_start_time is not None:
+            if not self.long_press_warned:
+                press_duration_ms = (time.monotonic() - self.press_start_time) * 1000
+                if press_duration_ms >= LONG_PRESS_MS:
+                    action = self.ACTION_LONG_PRESS_WARNING
+                    self.long_press_warned = True
+                    dprint(f"Hosszú nyomás figyelmeztetés: {press_duration_ms:.0f}ms")
 
         # FELENGEDÉS érzékelése (False -> True)
         elif current_key_state and (not self.last_key_state):
             if self.press_start_time is not None:
                 press_duration_ms = (time.monotonic() - self.press_start_time) * 1000
                 self.press_start_time = None
+                self.long_press_warned = False  # Reset az flag-et
 
                 if press_duration_ms >= LONG_PRESS_MS:
                     # Hosszú nyomás -> Hard Reset
@@ -654,11 +676,11 @@ class Controls:
                     if self.in_menu:
                         # Menüben: kiválasztás
                         action = self.ACTION_MENU_SELECT
-                        dprint("Menüben kiválasztás")
+                        dprint("Állomás kiválasztva")
                     else:
                         # Normál módban: belépés menübe
                         action = self.ACTION_ENTER_MENU
-                        dprint("Belépés menübe")
+                        dprint("Belépés a lista menübe")
 
         self.last_key_state = current_key_state
 
@@ -783,12 +805,19 @@ class WebRadio:
 
                 # Hard reset
                 if hard_reset:
+                    self.display.show_reset_warning()
+                    time.sleep(0.15)
                     microcontroller.reset()
 
                 # MENU jelzés lenyomáskor (vizuális visszajelzés)
-                if action == self.controls.ACTION_SHOW_MENU_HINT and not self.controls.is_in_menu():
+                if action == self.controls.ACTION_SHOW_MENU_HINT:
                     self.display.show_playback_hint()
                     self.hint_shown = True
+                    continue  # Ne csináljunk mást, csak frissítsük a kijelzőt
+
+                # Hosszú nyomás figyelmeztetés (3mp után - még nyomva tartás alatt)
+                if action == self.controls.ACTION_LONG_PRESS_WARNING:
+                    self.display.show_reset_warning()
                     continue  # Ne csináljunk mást, csak frissítsük a kijelzőt
 
                 # Normál módban: állomás váltás
@@ -799,7 +828,7 @@ class WebRadio:
                     dprint(f"Váltás állomásra: {self.current_index}")
                     break
 
-                # Belépés menübe (rövid nyomás normál módban, felengedéskor)
+                # Belépés az állomáslista menübe (rövid nyomás normál módban, felengedéskor)
                 elif action == self.controls.ACTION_ENTER_MENU:
                     # Ha volt MENU jelzés, távolítsuk el
                     if self.hint_shown:
@@ -808,7 +837,7 @@ class WebRadio:
                     self.controls.enter_menu()
                     # Kurzor inicializálása az aktuális állomásra
                     self.controls.set_menu_cursor(self.current_index)
-                    # Frissítjük a kijelzőt a menü nézetre
+                    # Frissítjük a kijelzőt a lista nézetre
                     station_names = self._get_station_names()
                     self.display.show_menu(
                         self.station_manager.get_station_name(self.current_index),
@@ -816,9 +845,9 @@ class WebRadio:
                         station_names,
                         len(station_names)
                     )
-                    dprint("Menü megnyitva")
+                    dprint("Állomáslista menü megnyitva")
 
-                # Menüben: böngészés (enkóder tekerés)
+                # Menüben: állomáslista böngészés (enkóder tekerés)
                 elif action == self.controls.ACTION_MENU_BROWSE and self.controls.is_in_menu():
                     # Frissítjük a kijelzőt az új kurzor pozícióval
                     station_names = self._get_station_names()
@@ -829,16 +858,16 @@ class WebRadio:
                         station_names,
                         len(station_names)
                     )
-                    dprint(f"Menü böngészés: {station_names[self.controls.get_menu_cursor()]}")
+                    dprint(f"Állomás böngészés: {station_names[self.controls.get_menu_cursor()]}")
 
-                # Menüben: kiválasztás (rövid nyomás)
+                # Menüben: állomás kiválasztás (rövid nyomás)
                 elif action == self.controls.ACTION_MENU_SELECT and self.controls.is_in_menu():
                     selected_station_index = self.controls.get_menu_cursor()
                     self.controls.exit_menu()
                     menu_exit_with_select = True
                     manual_switch = True
                     self.audio_player.stop()
-                    dprint(f"Menü kiválasztás: {selected_station_index}")
+                    dprint(f"Állomás kiválasztás: {selected_station_index}")
                     break
 
                 # CPU pihentetés
