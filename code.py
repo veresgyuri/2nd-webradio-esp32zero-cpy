@@ -439,7 +439,7 @@ class Display:
             display_bus = i2cdisplaybus.I2CDisplayBus(i2c, device_address=0x3C)
             self.display = adafruit_displayio_ssd1306.SSD1306(display_bus, width=128, height=32)
 
-            boot_text = f"Hello!  {VERSION[:4]} verzio\nkeres...{SSID[:13]}"
+            boot_text = f"Hello!  {VERSION[:4]} verzio\nkeres: {SSID[:13]}"
             self.text_area = label.Label(
                 terminalio.FONT, text=boot_text, scale=1, line_spacing=1.5)
             self.text_area.x = 2
@@ -519,7 +519,7 @@ class Display:
 
             # Két sor összefűzése új sor karakterrel
             self.text_area.text = f"{top_line}\n{bottom_line}"
-            self.text_area.y = 4  # Felső margó
+            self.text_area.y = 10  # Felső margó
 
     def release(self):
         """Release display resources."""
@@ -624,7 +624,7 @@ class Controls:
                 new_index = (current_index + delta) % stations_len
                 # NVM mentés azonnal (csak normál módban!)
                 microcontroller.nvm[0] = new_index
-                dprint(f"Váltás -> Mentve NVM-be: {new_index}")
+                dprint(f"Állomás váltás -> Mentve NVM-be: {new_index}")
                 action = self.ACTION_SWITCH_STATION
 
         # 2. GOMB (KEY) FIGYELÉSE (időméréssel + azonnali visszajelzés)
@@ -638,21 +638,25 @@ class Controls:
             # Eltároljuk a lenyomás időpontját
             self.press_start_time = time.monotonic()
             self.long_press_warned = False  # Reset az flag-et
-            dprint("Gomb LENYOMVA")
+            dprint("Enkóder gomb LENYOMVA")
 
             # Azonnali vizuális visszajelzés (ha nem vagyunk menüben)
             if not self.in_menu:
                 action = self.ACTION_SHOW_MENU_HINT
-                dprint("- LISTA - jelzés megjelenítve")
+                dprint("- LISTA - megjelenítve")
 
         # NÖV: Még nyomva tartás alatt - hosszú nyomás figyelmeztetés
-        elif (not current_key_state) and (not self.last_key_state) and self.press_start_time is not None:
+# elif (not current_key_state) and (not self.last_key_state) and self.press_start_time is not None:
+        elif (
+            (not current_key_state) and (not self.last_key_state)
+            and self.press_start_time is not None
+        ):
             if not self.long_press_warned:
                 press_duration_ms = (time.monotonic() - self.press_start_time) * 1000
                 if press_duration_ms >= LONG_PRESS_MS:
                     action = self.ACTION_LONG_PRESS_WARNING
                     self.long_press_warned = True
-                    dprint(f"Hosszú nyomás figyelmeztetés: {press_duration_ms:.0f}ms")
+                    dprint(f"Hosszú nyomás észlelve: {press_duration_ms:.0f}ms")
 
         # FELENGEDÉS érzékelése (False -> True)
         elif current_key_state and (not self.last_key_state):
@@ -672,7 +676,7 @@ class Controls:
                     action = self.ACTION_HARD_RESET
                 else:
                     # Rövid nyomás
-                    dprint(f"Rövid nyomás: {press_duration_ms:.0f}ms")
+                    dprint(f"Rövid nyomás időtartama: {press_duration_ms:.0f}ms")
                     if self.in_menu:
                         # Menüben: kiválasztás
                         action = self.ACTION_MENU_SELECT
@@ -825,7 +829,7 @@ class WebRadio:
                     self.current_index = value
                     manual_switch = True
                     self.audio_player.stop()
-                    dprint(f"Váltás állomásra: {self.current_index}")
+                    dprint(f"Kiválasztva: {self.current_index}")
                     break
 
                 # Belépés az állomáslista menübe (rövid nyomás normál módban, felengedéskor)
@@ -858,7 +862,7 @@ class WebRadio:
                         station_names,
                         len(station_names)
                     )
-                    dprint(f"Lista böngészés: {station_names[self.controls.get_menu_cursor()]}")
+                    dprint(f"Böngészés státusza: {station_names[self.controls.get_menu_cursor()]}")
 
                 # Menüben: állomás kiválasztás (rövid nyomás)
                 elif action == self.controls.ACTION_MENU_SELECT:
@@ -921,7 +925,7 @@ class WebRadio:
                 user_switched = self.stream_radio(station)
 
                 if user_switched:
-                    dprint("Kézi váltás -> Következő adó...")
+                    dprint("Kézi váltás történt -> Következő adó...")
                     time.sleep(0.5)
                 else:
                     dprint("Hiba / Hibás webcím -> Enkóder forgatással kilépés!")
