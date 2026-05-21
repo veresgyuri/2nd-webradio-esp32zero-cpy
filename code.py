@@ -624,7 +624,7 @@ class Controls:
                 new_index = (current_index + delta) % stations_len
                 # NVM mentés azonnal (csak normál módban!)
                 microcontroller.nvm[0] = new_index
-                dprint(f"Állomás váltás -> Mentve NVM-be: {new_index}")
+                dprint(f"Encoder váltás -> Mentve NVM-be: {new_index}")
                 action = self.ACTION_SWITCH_STATION
 
         # 2. GOMB (KEY) FIGYELÉSE (időméréssel + azonnali visszajelzés)
@@ -871,7 +871,7 @@ class WebRadio:
                     menu_exit_with_select = True
                     manual_switch = True
                     self.audio_player.stop()
-                    dprint(f"Állomás kiválasztás: {selected_station_index}")
+                    dprint(f">>> Új állomás: {selected_station_index}")
                     break
 
                 # CPU pihentetés
