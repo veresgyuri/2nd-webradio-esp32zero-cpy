@@ -222,6 +222,7 @@ EC-11            USB-C           MAX98357a
 # ver 3.21 - add SSID info to boot display
 # ver 3.22 - hibás webcím kezelés (Idle loop)
 # ver 3.23 - 2026-05-10 RESET visszajelzés kijelzőn (3 sec)
+# ver 3.24 - 2026-05-24 Boot status display - indulási fázisok kijelzőn
 
 
 # --- MODULOK ---
@@ -257,7 +258,7 @@ from adafruit_display_text import label
 import adafruit_displayio_ssd1306
 
 # --- KONFIGURÁCIÓ ÉS VERZIÓ ---
-VERSION = "3.23 - display RESET"
+VERSION = "3.24 - Boot status"
 DEBUG = True
 KEY_DEBOUNCE_S = 0.05
 LONG_PRESS_MS = 3000  # Hosszú nyomás küszöb (ms)
@@ -480,6 +481,13 @@ class Display:
             self.text_area.scale = 2
             self.text_area.y = 20
             self.text_area.text = "- RESET -"
+
+    def show_boot_status(self, status_text):
+        """Boot fázisok megjelenítése az OLED-en"""
+        if self.text_area:
+            self.text_area.scale = 1
+            self.text_area.y = 7
+            self.text_area.text = status_text
 
     def restore_playback(self):
         """ Visszaállítja az eredeti lejátszási nézetet """
@@ -713,15 +721,29 @@ class WebRadio:
 
     def init_hardware(self):
         """Initialize all hardware components."""
+        t_start = time.monotonic()
         dprint("\n" + "=" * 40)
         dprint(f"--- ESP32-S3 WebRadio {VERSION} ---")
         dprint("=" * 40)
+        
+        t1 = time.monotonic()
         self.controls.setup()
+        t2 = time.monotonic()
+        dprint(f"Controls.setup() = {(t2-t1)*1000:.0f}ms")
+        
         self.display.init()
+        t3 = time.monotonic()
+        dprint(f"Display.init() = {(t3-t2)*1000:.0f}ms")
+        
+        t_total = time.monotonic() - t_start
+        dprint(f"init_hardware() total = {t_total*1000:.0f}ms")
 
     def load_stations(self):
         """Load stations from configuration file."""
+        t_start = time.monotonic()
         self.stations = self.station_manager.load()
+        t_end = time.monotonic()
+        dprint(f"load_stations() = {(t_end-t_start)*1000:.0f}ms")
         if not self.stations:
             dprint("KRITIKUS HIBA: Nincs állomáslista!")
             while True:
@@ -909,11 +931,16 @@ class WebRadio:
     def run(self):
         """ Fő program ciklus """
         self.init_hardware()
+        self.display.show_boot_status("Boot OK\nStations loading...")
+        time.sleep(0.3)
         self.load_stations()
+        self.display.show_boot_status("Stations OK\nWiFi init...")
+        time.sleep(0.3)
         self.restore_nvm()
         self.init_network()
 
         while True:
+            self.display.show_boot_status("Connecting\nWiFi...")
             if self.wifi_manager.ensure_connection():
                 station = self.station_manager.get_station(self.current_index)
                 if station is None:
@@ -953,5 +980,12 @@ class WebRadio:
 
 # --- FŐ PROGRAM ---
 if __name__ == "__main__":
+    t_main_start = time.monotonic()
+    dprint(">>> MAIN START <<<")
+    
+    t1 = time.monotonic()
     radio = WebRadio()
+    t2 = time.monotonic()
+    dprint(f"WebRadio() init = {(t2-t1)*1000:.0f}ms")
+    
     radio.run()
