@@ -2,7 +2,7 @@
 
 Sorry folks, this repo comes with Hungarian comments only 🙂<br> 
 
-**Status:** Project closed / finalized by Gyuri on 2026-05-25 
+**Status:** Project closed / finalized by Gyuri on 2026-05-25. 
 
 Ez a projekt egy egyszerű, otthon is könnyen megépíthető internetes rádiót valósít meg.  
 A célja, hogy kevés és olcsó (~5eFt) alkatrészek segítségével online rádióadókat hallgathassunk.
