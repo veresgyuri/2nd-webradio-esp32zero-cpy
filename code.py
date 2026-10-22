@@ -223,6 +223,7 @@ EC-11            USB-C           MAX98357a
 # ver 3.22 - hibás webcím kezelés (Idle loop)
 # ver 3.23 - 2026-05-10 RESET visszajelzés kijelzőn (3 sec)
 # ver 3.24 - 2026-05-24 Boot status display - indulási fázisok kijelzőn
+# ver 3.25 - 2026-10-22 Rotary modify, line563 (balra egy, jobbra kettő miatt)
 
 
 # --- MODULOK ---
@@ -258,7 +259,7 @@ from adafruit_display_text import label
 import adafruit_displayio_ssd1306
 
 # --- KONFIGURÁCIÓ ÉS VERZIÓ ---
-VERSION = "3.24 - Boot status"
+VERSION = "3.25 - EC-11 modify"
 DEBUG = True
 KEY_DEBOUNCE_S = 0.05
 LONG_PRESS_MS = 3000  # Hosszú nyomás küszöb (ms)
@@ -560,7 +561,8 @@ class Controls:
 
     def setup(self):
         """Initialize encoder and button hardware."""
-        self.encoder = rotaryio.IncrementalEncoder(PIN_ENC_S1, PIN_ENC_S2)
+        #self.encoder = rotaryio.IncrementalEncoder(PIN_ENC_S1, PIN_ENC_S2) EC11-type1
+        self.encoder = rotaryio.IncrementalEncoder(PIN_ENC_S1, PIN_ENC_S2, divisor=2)
         self.key = digitalio.DigitalInOut(PIN_ENC_KEY)
         self.key.direction = digitalio.Direction.INPUT
         self.key.pull = digitalio.Pull.UP
